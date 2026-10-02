@@ -7,6 +7,8 @@ const pdf = require('../../lib/pdf');
 const db = require('../db');
 const { UNIT_TYPES } = require('../../lib/unit-types');
 const masterplan = require('../../lib/masterplan');
+const company = require('../../lib/company');
+const terms = require('../../lib/terms');
 
 const DOCX = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
 const safe = (s) => String(s || '').replace(/[^\w\-]+/g, '_').replace(/^_+|_+$/g, '');
@@ -48,6 +50,8 @@ async function pdfOf(row) {
 }
 
 r.get('/unit-types', (_req, res) => res.json(UNIT_TYPES));
+r.get('/company', (_req, res) => res.json(company));
+r.get('/terms', (_req, res) => res.json({ pesanan: terms.SURAT_PESANAN, account: terms.ACCOUNT_PESANAN }));
 r.get('/masterplan', (_req, res) => res.json({ lots: masterplan.LOTS, view: masterplan.VIEW, legend: masterplan.LEGEND }));
 r.get('/next-number', async (req, res) => res.json({ no: await numbering.peek(db, req.query.tanggal) }));
 
@@ -71,6 +75,21 @@ for (const [jenis, [render, name]] of Object.entries(TYPES)) {
 }
 
 r.get('/documents', async (req, res) => res.json(await store.listDocuments({ q: String(req.query.q || ''), jenis: String(req.query.jenis || '') })));
+
+// One document with its data and uploaded files (used to open it for correction).
+r.get('/documents/:id', async (req, res) => {
+  const row = await findDoc(req.params.id);
+  res.json({ id: row.id, no: row.no, jenis: row.jenis, data: row.data, files: await store.getDocumentFiles(row.id) });
+});
+
+// Correct a printed document: admin only. Same number; the PDF is rebuilt from the corrected data.
+r.put('/documents/:id', auth.requireRole('admin'), async (req, res) => {
+  const row = await findDoc(req.params.id);
+  const { doc } = await store.updateDocument(row.id, req.body, req.user, TYPES[row.jenis][0]);
+  let pdfReady = true;
+  try { await pdfOf({ id: row.id, jenis: row.jenis, data: doc }); } catch (e) { pdfReady = false; console.error(`[pdf] edit ${doc.no}:`, e.message); }
+  res.json({ id: row.id, no: doc.no, file: TYPES[row.jenis][1](doc) + '.pdf', pdfReady, pdf: `/api/documents/${row.id}/pdf` });
+});
 
 // Same number, same content, nothing new is reserved.
 r.get('/documents/:id/pdf', async (req, res) => {

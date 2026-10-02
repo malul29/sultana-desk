@@ -40,6 +40,9 @@ Buka `https://<domain-anda>` dan login dengan akun admin dari `.env`. Sertifikat
 
 Setiap dokumen mencatat siapa pembuatnya. Akun yang dinonaktifkan atau di-reset passwordnya langsung keluar dari semua sesi.
 
+## 3b. Berkas unggahan (KTP, NPWP, KK, rekening koran, surat nikah)
+Berkas yang diunggah staf pada SKU/SPU disimpan **di dalam database** (bukan di folder terpisah), jadi ikut tercadangkan oleh `backup.sh`/cron di bawah dan ikut terpulihkan saat restore. Perkiraan ruang: scan 1–3 MB per berkas, 2–5 berkas per dokumen. Berkas yang diunggah tetapi dokumennya tidak jadi dicetak dihapus otomatis setelah 24 jam.
+
 ## 4. Cadangan (WAJIB)
 ```bash
 ./deploy/backup.sh                 # coba sekali

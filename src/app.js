@@ -38,6 +38,8 @@ function createApp() {
   app.use('/api/auth', require('./routes/auth'));
   app.use('/api/users', require('./routes/users'));
   app.use('/api/units', require('./routes/units'));
+  app.use('/api/uploads', require('./routes/uploads'));
+  app.use('/api/report', require('./routes/report'));
   app.use('/api', require('./routes/documents'));
   app.use('/api', (_req, _res, next) => next(new auth.HttpError(404, 'Endpoint tidak ditemukan.')));
 
@@ -49,6 +51,8 @@ function createApp() {
     res.sendFile(path.join(PUB, 'index.html'));
   });
   app.get('/index.html', (_req, res) => res.redirect('/'));
+  // Payment-schedule rules shared with the browser (one source of truth with the server)
+  app.get('/shared/schedule.js', (_req, res) => res.type('js').set('Cache-Control', 'no-cache').sendFile(path.join(__dirname, '..', 'lib', 'schedule.js')));
   app.get('/login.html', (req, res) => (req.user ? res.redirect('/') : res.sendFile(path.join(PUB, 'login.html'))));
   app.use(express.static(PUB, { index: false, maxAge: '1h' }));
 
@@ -57,7 +61,7 @@ function createApp() {
     const status = err.status || (err.type === 'entity.parse.failed' ? 400 : err.type === 'entity.too.large' ? 413 : 500);
     if (status >= 500) console.error(`[error] ${req.method} ${req.path}:`, err);
     const msg = status >= 500 ? 'Terjadi kesalahan pada server.' : err.type === 'entity.parse.failed' ? 'Format data tidak valid.' : err.message;
-    if (req.path.startsWith('/api')) res.status(status).json({ error: msg });
+    if (req.path.startsWith('/api')) res.status(status).json({ error: msg, ...(status < 500 && err.details ? err.details : {}) });
     else res.status(status).type('text').send(msg);
   });
 

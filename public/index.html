@@ -107,6 +107,7 @@
   aside footer .me { display:flex; flex-direction:column; gap:1px; margin-bottom:6px; } aside footer .me b { color:var(--ink); font-size:13px; } aside footer .me span { text-transform:capitalize; }
   .me-actions { display:flex; gap:12px; } .me-actions .link { padding:0; font-size:12px; }
   body.role-staff .admin-only { display:none !important; }
+  dialog form { display:block; } /* the global `form { display:none }` is only for the document forms */
   dialog { border:1px solid var(--line); border-radius:14px; padding:22px; width:min(380px, 92vw); } dialog::backdrop { background:rgba(15,20,17,.4); }
   dialog h3 { margin:0 0 14px; font-size:16px; } dialog label { grid-template-columns:1fr; gap:4px; margin-bottom:12px; }
   .inline-form { display:grid; grid-template-columns:repeat(4, 1fr) auto; gap:10px; align-items:end; margin-bottom:16px; } .inline-form label { grid-template-columns:1fr; gap:4px; }
@@ -125,9 +126,15 @@
   .pill { display:inline-block; padding:2px 9px; border-radius:99px; font-size:11.5px; font-weight:600; background:var(--soft); color:var(--brand-d); }
   .st-tersedia { background:#e6f3e6; color:#2d6a33; } .st-terjual { background:#e8e8ee; color:#4b4f63; } .st-dipesan { background:#fef4e6; color:#9c5b05; }
   .link { background:none; border:0; color:var(--brand-d); font:inherit; font-weight:600; cursor:pointer; padding:2px 4px; } .link:hover { text-decoration:underline; } .link.del { color:#a4372d; }
+  .nowrap { white-space:nowrap; } .files { font-size:12px; line-height:1.7; } .files .link { margin-right:6px; }
   .cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:16px; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; } .card b { display:block; font-size:24px; line-height:1.1; } .card span { font-size:12px; color:var(--mute); } .card small { display:block; margin-top:4px; font-size:11.5px; color:#8a968b; }
   /* unit cards (stok unit) */
+  .pager { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:16px 0 4px; font-size:13px; color:var(--mute); } .pager b { color:var(--ink); }
+  .pg-btns { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+  .pg { min-width:34px; height:34px; padding:0 11px; border:1px solid var(--line); background:#fff; color:var(--ink); border-radius:8px; font:inherit; font-size:13px; cursor:pointer; }
+  .pg:hover:not(:disabled):not(.cur) { background:var(--soft); } .pg.cur { background:var(--brand); border-color:var(--brand); color:#fff; font-weight:600; } .pg:disabled { opacity:.45; cursor:default; }
+  .pg-gap { padding:0 4px; color:var(--mute); }
   .unit-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(232px, 1fr)); gap:12px; }
   .uc { background:var(--card); border:1px solid var(--line); border-radius:13px; padding:14px 15px 12px; display:flex; flex-direction:column; gap:10px; transition:border-color .15s ease, box-shadow .15s ease; }
   .uc:hover { border-color:#c2cbc4; box-shadow:0 2px 10px -6px rgba(20,30,50,.22); }
@@ -140,6 +147,8 @@
   .uc-specs small { display:block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#9aa79a; margin-bottom:2px; }
   .uc-specs span { font-size:12.5px; font-weight:600; color:#4a5350; }
   .uc-who { font-size:12.5px; color:#5c635f; display:flex; align-items:baseline; gap:6px; min-width:0; }
+  .uc-who { flex-wrap:wrap; } .uc-who small, .uc-val small { font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#8a968b; margin-right:2px; }
+  .uc-val { display:flex; align-items:baseline; gap:8px; margin:2px 0 8px; font-size:13px; } .uc-val b { font-weight:700; color:var(--brand-d); font-variant-numeric:tabular-nums; }
   .uc-who b { font-weight:600; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .uc-who em { font-style:normal; font-size:11px; color:#9aa79a; font-variant-numeric:tabular-nums; }
   .uc-foot { display:flex; align-items:center; gap:8px; padding-top:10px; border-top:1px solid var(--line); }
@@ -148,6 +157,40 @@
   .uc-foot .link { padding:2px 2px; font-size:12.5px; }
   .addbox { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px; margin-bottom:14px; } .addbox[hidden] { display:none; }
   @media (max-width:700px) { .cards { grid-template-columns:repeat(2,1fr); } }
+  /* forms: conditions, payment schedule, uploads, required fields, edit banner */
+  [hidden] { display:none !important; }
+  .sched .shead, .sched .srow { display:grid; grid-template-columns:170px 1fr 1fr; gap:10px; align-items:center; margin-bottom:8px; }
+  .sched .shead span { font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#8a968b; }
+  .sched .sl { font-size:13px; font-weight:500; color:#5c635f; } .sched .sl small { color:var(--mute); font-weight:400; }
+  .sched input.auto { background:var(--soft); color:var(--brand-d); font-weight:600; cursor:default; }
+  .scfg { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin:14px 0 10px; padding:12px; background:#f8faf8; border:1px solid var(--line); border-radius:10px; }
+  .scfg label { grid-template-columns:1fr; gap:4px; }
+  .upl-list { display:grid; gap:8px; }
+  .upl { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding:8px 12px; border:1px dashed var(--line); border-radius:10px; background:#fcfdfc; }
+  .upl .ul { width:160px; font-size:13px; font-weight:500; color:#5c635f; } .upl .us { flex:1; min-width:140px; font-size:12.5px; color:var(--mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .upl .ghost { padding:6px 12px; font-size:12.5px; } .upl .uv { font-size:12.5px; font-weight:600; color:var(--brand-d); }
+  .upl.done { border-style:solid; border-color:#bcd2b8; background:var(--soft); } .upl.done .us { color:var(--brand-d); font-weight:500; }
+  .is-missing { outline:2px solid #e3a8a1; outline-offset:3px; border-radius:8px; }
+  label.is-missing input, label.is-missing select, label.is-missing textarea, .srow.is-missing input { border-color:#c95a50; }
+  .print-btn.blocked { opacity:.5; cursor:not-allowed; filter:grayscale(.35); }
+  .msg.error { color:#a4372d; font-weight:500; } .msg.hint { color:var(--mute); }
+  .banner { display:flex; align-items:center; gap:12px; padding:10px 14px; margin:0 0 16px; background:#fff6e0; border:1px solid #efd9a0; border-radius:10px; font-size:13px; } .banner span { flex:1; }
+  @media (max-width:640px) { .sched .shead { display:none; } .sched .srow, .scfg { grid-template-columns:1fr; } .upl .ul { width:100%; } }
+  /* sales report */
+  .rp-bar { align-items:flex-end; } .rp-bar .inl { display:flex; flex-direction:column; gap:4px; font-size:12px; grid-template-columns:none; } .rp-bar .inl input { width:auto; }
+  .btnlink { display:inline-flex; align-items:center; text-decoration:none; padding:9px 16px; margin-left:auto; border:1px solid var(--line); border-radius:9px; color:var(--brand-d); font-weight:600; font-size:13px; background:#fff; } .btnlink:hover { background:var(--soft); }
+  .rp-cards { grid-template-columns:repeat(3, 1fr); } .card b.money { font-size:18px; }
+  .rp-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; margin:14px 0 6px; }
+  .rp-grid .tblwrap { overflow:auto; } .rp-grid .wide { grid-column:1 / -1; } .rp-grid h5 { margin:0; padding:10px 12px 6px; font-size:12px; letter-spacing:.04em; text-transform:uppercase; color:#8a968b; background:#f8faf8; }
+  .rp-grid .tbl td, .rp-grid .tbl th { padding:6px 10px; } .rp-grid .tbl tfoot td { font-weight:700; border-top:1px solid var(--line); }
+  @media (max-width:760px) { .rp-grid, .rp-cards { grid-template-columns:1fr; } }
+  .mh { display:block; margin:-4px 0 2px 182px; font-size:12px; color:var(--brand-d); font-weight:500; min-height:0; } .mh:empty { display:none; }
+  input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; } input[type=number] { -moz-appearance:textfield; appearance:textfield; }
+  @media (max-width:600px) { .mh { margin-left:0; } }
+  /* table pages use the full width of the content area (the 820px cap is for forms) */
+  body[data-tab="rw"] .content-in, body[data-tab="lp"] .content-in, body[data-tab="us"] .content-in { max-width:none; }
+  #rwTbl td, #rwTbl th { padding:9px 10px; } #rwTbl td:nth-child(3), #rwTbl td:nth-child(4) { white-space:normal; min-width:96px; }
+  #rwTbl td.mono, #rwTbl td.nowrap { white-space:nowrap; } #rwTbl td.nowrap .link { margin-left:8px; } #rwTbl td.nowrap .link:first-child { margin-left:0; }
   /* masterplan */
   #mpCol { flex:none; width:520px; position:sticky; top:20px; display:none; }
   body[data-tab="st"] #mpCol { display:block; }
@@ -176,7 +219,7 @@
   #pvbox { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px; box-shadow:0 1px 3px rgba(20,30,50,.08); max-height:calc(100vh - 90px); overflow:auto; }
   #pvinner { position:relative; }
   #paper { width:794px; transform-origin:top left; background:#fff; box-shadow:0 0 0 1px var(--line); padding:38px 40px 46px; font:10pt/1.35 Calibri,'Carlito',system-ui,sans-serif; color:#000; }
-  #paper .lamp { text-align:right; font-weight:700; font-size:10pt; }
+  #paper .lamp-wrap { text-align:right; } #paper .lamp { display:inline-block; border:1px solid #222; padding:3px 16px; font-weight:700; font-size:10pt; }
   #paper .kop { display:flex; align-items:center; margin:4px 0 0; border-bottom:2px solid #444; padding-bottom:8px; }
   #paper .kop img { width:173px; flex:none; display:block; }
   #paper .kop .kmid { flex:1; text-align:center; }
@@ -188,11 +231,13 @@
   #paper .ph { display:inline-block; min-width:150px; border-bottom:1px solid #9aa; vertical-align:baseline; }
   #paper .hb { font-weight:700; text-decoration:underline; font-size:10pt; margin:10px 0 4px; }
   #paper .jd td, #paper .jd th { border:1px solid #000; padding:3px 6px; font-size:10pt; text-align:center; }
-  #paper .jd td:first-child, #paper .jd th:first-child { text-align:left; }
+  #paper .jd-1 td, #paper .jd-1 th { padding:2px 6px; } #paper .jd-2 td, #paper .jd-2 th { font-size:9pt; padding:1px 6px; } #paper .jd-3 td, #paper .jd-3 th { font-size:8pt; padding:0 6px; } #paper .jd td:first-child, #paper .jd th:first-child { text-align:left; }
   #paper p { margin:4px 0; font-size:10pt; }
   #paper .just { text-align:justify; }
   #paper .sig td { text-align:center; font-size:10pt; vertical-align:bottom; }
-  #paper .sig .sp { height:56px; }
+  /* unit letters: date + signatures rest at the bottom of the A4 sheet, like the printed page footer */
+  #paper[data-doc="unit"] { display:flex; flex-direction:column; min-height:1123px; } #paper[data-doc="unit"] .push { margin-top:auto; padding-top:10px; }
+  #paper .sig .sp { height:64px; } #paper .sig.sig-tight .sp { height:40px; } /* same rule as the printed letter: long schedule → less signing room */
   #paper .no { font-size:10pt; margin:0; text-align:center; }
   #paper .kop + table { margin-top:14px; }
   #paper .un { text-decoration:underline; }
@@ -230,19 +275,13 @@
   #paper .msig small { display:block; font-size:7.5pt; font-weight:700; letter-spacing:1.5px; color:#7A857D; text-transform:uppercase; margin-bottom:36px; }
   #paper .msig .ln { border-bottom:1px solid #1F2A24; font-weight:700; min-height:18px; margin-bottom:2px; } #paper .msig .sub { font-size:8pt; color:#7A857D; }
   /* Terms and Conditions document */
-  #paper[data-doc="sp"] { font:10pt/1.35 Calibri,'Carlito',system-ui,sans-serif; padding:50px 60px; }
-  #paper[data-doc="sp"] h2 { font-size:12pt; text-align:center; margin:0 0 16px; font-weight:700; color:#1F2A24; letter-spacing:.5px; }
-  #paper[data-doc="sp"] .t-head { font-weight:700; margin:14px 0 6px; }
-  #paper[data-doc="sp"] ol { margin:0; padding:0; list-style:none; counter-reset:t-num; }
-  #paper[data-doc="sp"] li { position:relative; margin-bottom:8px; padding-left:26px; text-align:justify; }
-  #paper[data-doc="sp"] li::before { counter-increment:t-num; content:counter(t-num) "."; position:absolute; left:0; font-weight:normal; }
-  #paper[data-doc="sp"] .t-sub { list-style:none; margin:4px 0 0; padding:0; }
-  #paper[data-doc="sp"] .t-sub li { padding-left:20px; margin-bottom:4px; }
-  #paper[data-doc="sp"] .t-sub li::before { content:"-"; left:0; }
-  #paper[data-doc="sp"] .t-acc { margin:8px 0; }
-  #paper[data-doc="sp"] .t-acc td { padding:2px 0; font-weight:700; }
-  #paper[data-doc="sp"] .t-acc .k { width:22%; } #paper[data-doc="sp"] .t-acc .c { width:4%; }
-  #paper[data-doc="sp"] .t-close { margin-top:20px; text-align:justify; }
+  #paper[data-doc="sp"] { font:7.4pt/1.32 Calibri,'Carlito',system-ui,sans-serif; padding:34px 34px 40px; }
+  #paper[data-doc="sp"] .t-cols { column-count:2; column-gap:26px; text-align:justify; }
+  #paper[data-doc="sp"] h2 { font-size:11pt; text-align:left; margin:0 0 8px; font-weight:700; color:#1F2A24; letter-spacing:.3px; }
+  #paper[data-doc="sp"] .t-it, #paper[data-doc="sp"] .t-sub { display:flex; gap:7px; margin-bottom:3px; } #paper[data-doc="sp"] .t-it > span { width:15px; flex:none; text-align:right; }
+  #paper[data-doc="sp"] .t-sub { margin:2px 0 3px; } #paper[data-doc="sp"] .t-sub > span { width:12px; flex:none; } #paper[data-doc="sp"] .t-it > div, #paper[data-doc="sp"] .t-sub > div { flex:1; min-width:0; }
+  #paper[data-doc="sp"] p { margin:2px 0; font-size:inherit; } #paper[data-doc="sp"] .t-acc2 { margin:3px 0 3px 4px; } #paper[data-doc="sp"] .t-acc2 td { padding:0 8px 0 0; }
+  #paper[data-doc="sp"] .t-close { margin-top:10px; text-align:justify; }
   #paper .lamp-note { font-size:10pt; margin:8px 0 0; text-align:center; }
   #paper .pg-footer { margin-top:26px; padding-top:6px; border-top:1px solid #ddd; text-align:center; font-size:7pt; color:#666; }
   .pv-actions { border-top:0; padding-top:12px; }
@@ -270,8 +309,6 @@
     .actions .go, .actions .ghost { flex:1; }
   }
   /* conditional form fields */
-  fieldset:has(input[value="tunai-keras"]:checked) label:has(input[name="cara.ket"]) { display:none; }
-  fieldset:has(input[name="jenis"][value="tunai"]:checked) .hide-if-tunai { display:none; }
   fieldset:has(input[name="untuk"][value="booking"]:checked) label:has(input[name="dpKe"]) { display:none; }
 </style>
 </head>
@@ -280,7 +317,7 @@
   <div class="topbar"><b>Sultana Living</b><button class="menu" id="menu" aria-label="Buka navigasi">☰ Menu</button></div>
   <aside id="side">
     <div class="brand">
-      <img src="/assets/logo-mark.png" alt="Sultana Living">
+      <img src="/assets/logo-color.png" alt="Sultana Living">
       <button type="button" class="toggle" id="collapse" aria-label="Buka/tutup sidebar" title="Buka/tutup sidebar">
         <svg viewBox="0 0 32 32" aria-hidden="true" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="currentColor" stroke-width="2.5">
           <path class="tg-p" d="M27 10 13 10C10.8 10 9 8.2 9 6 9 3.5 10.8 2 13 2 15.2 2 17 3.8 17 6L17 26C17 28.2 18.8 30 21 30 23.2 30 25 28.2 25 26 25 23.8 23.2 22 21 22L7 22" />
@@ -316,6 +353,10 @@
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
         <b>Stok Unit</b>
       </button>
+      <button data-t="lp">
+        <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-5"/><path d="M12 16V7"/><path d="M16 16v-8"/></svg>
+        <b>Laporan Penjualan</b>
+      </button>
       <button data-t="us" class="admin-only">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 5.6"/><path d="M18 14.8c1.8.7 3 2.4 3 5.2"/></svg>
         <b>Pengguna &amp; Aktivitas</b>
@@ -335,6 +376,11 @@
   <main class="content"><div class="work"><div class="content-in">
     <div class="page-title"><h1 id="ttl">Surat Konfirmasi Unit</h1><p id="sub"></p><button type="button" class="ghost" id="pvToggle" style="margin-left:auto;display:none" aria-pressed="false">Preview</button></div>
 
+  <div class="banner" id="editBanner" hidden>
+    <span>✎ Mengedit dokumen <b id="editNo"></b> — hanya Admin. Nomor tetap sama; PDF diganti dengan hasil koreksi.</span>
+    <button type="button" class="ghost" id="editCancel">Batal edit</button>
+  </div>
+
   <!-- SURAT KONFIRMASI -->
   <form id="sk" class="on" data-api="/api/surat-konfirmasi">
     <fieldset><h3 class="sect">Data Pemesan</h3>
@@ -347,7 +393,8 @@
         <label>NIK &amp; NPWP<input name="nikNpwp"></label>
         <label>Telp/HP<input name="telp"></label>
         <label>Email<input type="email" name="email"></label>
-        <label>Sumber Informasi<input name="sumber"></label>
+        <label>Sumber Informasi<select name="sumber"><option value="">Pilih sumber…</option><option value="medsos">Medsos</option><option value="referensi">Referensi</option><option value="walk-in">Walk in</option><option value="undangan">Undangan</option><option value="lain-lain">Lain-lain</option></select></label>
+        <label class="cond" data-when="sumber=lain-lain">Sebutkan<input name="sumberLain" placeholder="Sumber informasi lainnya"></label>
       </div>
     </fieldset>
     <fieldset><h3 class="sect">Unit Dipesan</h3>
@@ -357,25 +404,25 @@
         <label>Luas Bangunan<input name="luasBangunan" placeholder="mengikuti type"></label>
         <label>Harga Pengikatan (Rp)<input type="number" name="harga" min="0"></label>
       </div>
-      <div class="rowlabel" style="margin-top:22px"><span>Listrik</span><div class="radios" style="margin:0"><label><input type="radio" name="listrik" value="rumah"> Rumah Tinggal 2200 Watt</label><label><input type="radio" name="listrik" value="kost"> Rumah Kost 1300 Watt (@900/kamar)</label></div></div>
+      <div class="rowlabel" style="margin-top:22px"><span>Listrik</span><div class="radios" style="margin:0" data-label="Listrik"><label><input type="radio" name="listrik" value="rumah"> Rumah Tinggal 2200 Watt</label><label><input type="radio" name="listrik" value="kost"> Rumah Kost 1300 Watt (@900/kamar)</label></div></div>
       <p class="hint" style="margin:20px 0 10px">Harga termasuk (bawaan): Sertifikat SHM · IMB/PBG · Air Bersih · BPHTB, AJB &amp; Balik Nama Sertifikat · Biaya KPR (maks. 7% dari Plafond KPR) · Listrik</p>
       <div id="addons" class="addon-list"></div>
       <button type="button" class="ghost addAddon" data-for="addons">+ Tambah add on</button>
     </fieldset>
     <fieldset><h3 class="sect">Cara Pembayaran</h3>
-      <div class="radios"><label><input type="radio" name="cara.tipe" value="tunai-keras"> Tunai Keras</label><label><input type="radio" name="cara.tipe" value="tunai-bertahap"> Tunai Bertahap</label><label><input type="radio" name="cara.tipe" value="kpr"> KPR</label></div>
-      <label >Keterangan (untuk Tunai Bertahap / KPR)<input name="cara.ket"></label>
+      <div class="radios" data-label="Cara Pembayaran"><label><input type="radio" name="cara.tipe" value="tunai-keras"> Tunai Keras</label><label><input type="radio" name="cara.tipe" value="tunai-bertahap"> Tunai Bertahap</label><label><input type="radio" name="cara.tipe" value="kpr"> KPR</label></div>
     </fieldset>
-    <fieldset><h3 class="sect">Jadwal Pembayaran</h3>
-      <table>
-        <tr><th>Keterangan</th><th>Tanggal jatuh tempo</th><th>Jumlah (Rp)</th></tr>
-        <tr><td>Reservasi</td><td><input type="date" name="jadwal.reservasi.tanggal"></td><td><input type="number" name="jadwal.reservasi.jumlah"></td></tr>
-        <tr><td>Booking Fee</td><td><input type="date" name="jadwal.booking.tanggal"></td><td><input type="number" name="jadwal.booking.jumlah"></td></tr>
-        <tr><td>Uang Muka (<input name="jadwal.dpKali" style="width:44px;display:inline;padding:3px" inputmode="numeric">×)</td><td><input type="date" name="jadwal.dp.tanggal"></td><td><input type="number" name="jadwal.dp.jumlah"></td></tr>
-        <tr><td>Pelunasan KPR</td><td><input type="date" name="jadwal.kpr.tanggal"></td><td><input type="number" name="jadwal.kpr.jumlah"></td></tr>
-      </table>
+    <fieldset class="cond" data-when="cara.tipe=tunai-keras|tunai-bertahap|kpr"><h3 class="sect">Jadwal Pembayaran</h3>
+      <div class="sched" data-reservasi="1"></div>
     </fieldset>
-    <fieldset><h3 class="sect">Penandatangan (opsional)</h3>
+    <fieldset><h3 class="sect">Dokumen Pemesan</h3>
+      <div class="upl-list">
+        <div class="upl" data-kind="ktp"></div>
+        <div class="upl" data-kind="npwp"></div>
+      </div>
+      <p class="hint" style="margin:10px 0 0">Berkas PDF/JPG/PNG/WEBP, maks. 8 MB per berkas.</p>
+    </fieldset>
+    <fieldset><h3 class="sect">Penandatangan</h3>
       <div class="grid"><label>Penerima Pesanan<input name="penerima"></label><label>Sales<input name="sales"></label></div>
       
     </fieldset>
@@ -394,7 +441,8 @@
         <label>NIK &amp; NPWP<input name="nikNpwp"></label>
         <label>Telp/HP<input name="telp"></label>
         <label>Email<input type="email" name="email"></label>
-        <label>Sumber Informasi<input name="sumber"></label>
+        <label>Sumber Informasi<select name="sumber"><option value="">Pilih sumber…</option><option value="medsos">Medsos</option><option value="referensi">Referensi</option><option value="walk-in">Walk in</option><option value="undangan">Undangan</option><option value="lain-lain">Lain-lain</option></select></label>
+        <label class="cond" data-when="sumber=lain-lain">Sebutkan<input name="sumberLain" placeholder="Sumber informasi lainnya"></label>
       </div>
     </fieldset>
     <fieldset><h3 class="sect">Unit Dipesan</h3>
@@ -404,24 +452,28 @@
         <label>Luas Bangunan<input name="luasBangunan" placeholder="mengikuti type"></label>
         <label>Harga Pengikatan (Rp)<input type="number" name="harga" min="0"></label>
       </div>
-      <div class="rowlabel" style="margin-top:22px"><span>Listrik</span><div class="radios" style="margin:0"><label><input type="radio" name="listrik" value="rumah"> Rumah Tinggal 2200 Watt</label><label><input type="radio" name="listrik" value="kost"> Rumah Kost 1300 Watt (@900/kamar)</label></div></div>
+      <div class="rowlabel" style="margin-top:22px"><span>Listrik</span><div class="radios" style="margin:0" data-label="Listrik"><label><input type="radio" name="listrik" value="rumah"> Rumah Tinggal 2200 Watt</label><label><input type="radio" name="listrik" value="kost"> Rumah Kost 1300 Watt (@900/kamar)</label></div></div>
       <p class="hint" style="margin:20px 0 10px">Harga termasuk (bawaan): Sertifikat SHM · IMB/PBG · Air Bersih · BPHTB, AJB &amp; Balik Nama Sertifikat · Biaya KPR (maks. 7% dari Plafond KPR) · Listrik</p>
       <div id="addons-su" class="addon-list"></div>
       <button type="button" class="ghost addAddon" data-for="addons-su">+ Tambah add on</button>
     </fieldset>
     <fieldset><h3 class="sect">Cara Pembayaran</h3>
-      <div class="radios"><label><input type="radio" name="cara.tipe" value="tunai-keras"> Tunai Keras</label><label><input type="radio" name="cara.tipe" value="tunai-bertahap"> Tunai Bertahap</label><label><input type="radio" name="cara.tipe" value="kpr"> KPR</label></div>
-      <label>Keterangan (untuk Tunai Bertahap / KPR)<input name="cara.ket"></label>
+      <div class="radios" data-label="Cara Pembayaran"><label><input type="radio" name="cara.tipe" value="tunai-keras"> Tunai Keras</label><label><input type="radio" name="cara.tipe" value="tunai-bertahap"> Tunai Bertahap</label><label><input type="radio" name="cara.tipe" value="kpr"> KPR</label></div>
     </fieldset>
-    <fieldset><h3 class="sect">Jadwal Pembayaran</h3>
-      <table>
-        <tr><th>Keterangan</th><th>Tanggal jatuh tempo</th><th>Jumlah (Rp)</th></tr>
-        <tr><td>Booking Fee</td><td><input type="date" name="jadwal.booking.tanggal"></td><td><input type="number" name="jadwal.booking.jumlah"></td></tr>
-        <tr><td>Uang Muka (<input name="jadwal.dpKali" style="width:44px;display:inline;padding:3px" inputmode="numeric">×)</td><td><input type="date" name="jadwal.dp.tanggal"></td><td><input type="number" name="jadwal.dp.jumlah"></td></tr>
-        <tr><td>Pelunasan KPR</td><td><input type="date" name="jadwal.kpr.tanggal"></td><td><input type="number" name="jadwal.kpr.jumlah"></td></tr>
-      </table>
+    <fieldset class="cond" data-when="cara.tipe=tunai-keras|tunai-bertahap|kpr"><h3 class="sect">Jadwal Pembayaran</h3>
+      <div class="sched" data-reservasi="0"></div>
     </fieldset>
-    <fieldset><h3 class="sect">Penandatangan (opsional)</h3>
+    <fieldset><h3 class="sect">Dokumen Pemesan</h3>
+      <div class="upl-list">
+        <div class="upl" data-kind="ktp"></div>
+        <div class="upl" data-kind="npwp"></div>
+        <div class="upl cond" data-kind="kk" data-when="cara.tipe=kpr"></div>
+        <div class="upl cond" data-kind="rekening" data-when="cara.tipe=kpr"></div>
+        <div class="upl cond" data-kind="nikah" data-when="cara.tipe=kpr"></div>
+      </div>
+      <p class="hint" style="margin:10px 0 0">Berkas PDF/JPG/PNG/WEBP, maks. 8 MB per berkas. KK, Rekening Koran, dan Surat Nikah wajib bila memilih KPR.</p>
+    </fieldset>
+    <fieldset><h3 class="sect">Penandatangan</h3>
       <div class="grid"><label>Penerima Pesanan<input name="penerima"></label><label>Sales<input name="sales"></label></div>
     </fieldset>
     <div class="actions"><button class="go print-btn"><span class="lbl">Cetak</span><i class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg></i></button><button type="button" class="ghost reset">Kosongkan</button><span class="msg"></span></div>
@@ -435,16 +487,17 @@
         <label>Tanggal (Gowa,)<input type="date" name="tanggal"></label>
         <label>Telah terima dari<input name="terimaDari"></label>
         <label>Jumlah (Rp)<input type="number" name="jumlah" min="0" step="1000" id="kwJumlah"></label>
-        <label>Terbilang<input name="terbilang" id="kwTerb"></label>
+        <label>Terbilang<input name="terbilang" id="kwTerb" data-optional></label>
       </div>
     </fieldset>
     <fieldset><h3 class="sect">Jenis Pembayaran</h3>
-      <div class="radios"><label><input type="radio" name="jenis" value="tunai" checked> Tunai</label><label><input type="radio" name="jenis" value="transfer"> Transfer/Cek</label></div>
-      <div class="grid hide-if-tunai"><label>Bank<input name="bank"></label><label>Tanggal transfer<input type="date" name="tglTransfer"></label></div>
+      <div class="radios" data-label="Jenis Pembayaran"><label><input type="radio" name="jenis" value="tunai"> Tunai</label><label><input type="radio" name="jenis" value="transfer"> Transfer/Cek</label></div>
+      <div class="grid" style="margin-top:12px"><label>Cair di rekening<select name="rekening"><option value="">Pilih rekening…</option><option value="pt-balla">PT. Balla Sultana Samata — BTN KCP Cipayung · 01057-01-30-000035-8</option></select></label></div>
+      <div class="grid cond" data-when="jenis=transfer"><label>Bank<input name="bank"></label><label>Tanggal transfer<input type="date" name="tglTransfer"></label></div>
     </fieldset>
     <fieldset><h3 class="sect">Untuk Pembayaran</h3>
-      <div class="radios"><label><input type="radio" name="untuk" value="booking" checked> Booking Fee</label><label><input type="radio" name="untuk" value="dp"> Uang Muka (DP)</label></div>
-      <div class="grid" ><label>DP ke-<input name="dpKe"></label><label>Nomor Unit<input name="noUnit"></label><label>Nama penandatangan<input name="penandatangan"></label></div>
+      <div class="radios" data-label="Untuk Pembayaran"><label><input type="radio" name="untuk" value="booking"> Booking Fee</label><label><input type="radio" name="untuk" value="dp"> Uang Muka (DP)</label></div>
+      <div class="grid"><label class="cond" data-when="untuk=dp">DP ke-<input name="dpKe" inputmode="numeric"></label><label>Nomor Unit<input name="noUnit"></label><label>Nama penandatangan<input name="penandatangan"></label></div>
     </fieldset>
     <div class="actions"><button class="go print-btn"><span class="lbl">Cetak</span><i class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg></i></button><button type="button" class="ghost reset">Kosongkan</button><span class="msg"></span></div>
   </form>
@@ -475,7 +528,7 @@
         <label>Catatan<textarea name="keterangan" rows="5" placeholder="Maks. 6 baris"></textarea></label>
       </div>
     </fieldset>
-    <fieldset><h3 class="sect">Penandatangan (opsional)</h3>
+    <fieldset><h3 class="sect">Penandatangan</h3>
       <div class="grid">
         <label>Yang Menerima<input name="penerima"></label>
         <label>Yang Menyerahkan<input name="penyerah"></label>
@@ -497,8 +550,25 @@
       <input id="rwQ" type="search" placeholder="Cari nomor, nama, atau unit…">
       <select id="rwJ"><option value="">Semua jenis</option><option value="surat-konfirmasi">Surat Konfirmasi Unit</option><option value="surat-pemesanan">Surat Pemesanan Unit</option><option value="kwitansi">Kwitansi</option><option value="tanda-terima">Tanda Terima</option></select>
     </div>
-    <div class="tblwrap"><table class="tbl" id="rwTbl"><thead><tr><th>Tanggal</th><th>No. Dokumen</th><th>Jenis</th><th>Nama</th><th>Unit</th><th class="r">Jumlah (Rp)</th><th>Dibuat oleh</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="tblwrap"><table class="tbl" id="rwTbl"><thead><tr><th>Tanggal</th><th>No. Dokumen</th><th>Jenis</th><th>Nama</th><th>Unit</th><th class="r">Jumlah (Rp)</th><th>Berkas</th><th>Dibuat oleh</th><th></th></tr></thead><tbody></tbody></table></div>
     <p class="hint" id="rwEmpty" style="display:none">Belum ada dokumen. Dokumen tersimpan otomatis setiap kali Anda menekan Unduh.</p>
+  </section>
+
+  <!-- LAPORAN PENJUALAN -->
+  <section id="lp" class="view">
+    <div class="report" id="rp">
+      <div class="bar rp-bar">
+        <label class="inl">Dari<input type="date" id="rpFrom"></label>
+        <label class="inl">Sampai<input type="date" id="rpTo"></label>
+        <button type="button" class="ghost" id="rpAll">Semua periode</button>
+        <a class="ghost btnlink" id="rpCsv" href="/api/report/csv" download>Unduh CSV</a>
+      </div>
+      <div class="cards rp-cards" id="rpCards"></div>
+      <div class="rp-grid" id="rpGrid"></div>
+      <h4 class="sub">Daftar penjualan</h4>
+      <div class="tblwrap"><table class="tbl" id="rpTbl"><thead><tr><th>Tanggal</th><th>No. Dokumen</th><th>Pemesan</th><th>Unit</th><th>Type</th><th class="r">Harga (Rp)</th><th>Cara bayar</th><th>Sales</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      <p class="hint" id="rpEmpty" style="display:none">Belum ada penjualan pada periode ini.</p>
+    </div>
   </section>
 
   <!-- PENGGUNA (admin) -->
@@ -532,7 +602,10 @@
       <div class="actions"><span class="msg" id="nuMsg"></span><button type="button" class="go" id="nuSave">Simpan</button></div>
     </div>
     <div class="unit-grid" id="stTbl"></div>
+    <p class="hint" id="stNone" style="display:none">Tidak ada unit yang cocok dengan filter.</p>
+    <div class="pager" id="stPager"></div>
     <p class="hint" id="stEmpty" style="display:none">Belum ada unit. Klik "+ Tambah unit" untuk memasukkan stok.</p>
+
   </section>
 
 </div>
@@ -572,6 +645,7 @@
     <div class="actions"><button type="button" class="ghost" id="pwCancel">Batal</button><button class="go" type="submit">Simpan</button></div>
   </form>
 </dialog>
+<script src="/shared/schedule.js"></script>
 <script>
 // Every request is same-origin: add the CSRF header and bounce to the login page when the session ends.
 const _fetch = window.fetch.bind(window);
@@ -585,7 +659,7 @@ const $ = (s, r = document) => r.querySelector(s);
 const forms = [...document.forms].filter((f) => f.dataset.api); // document forms only
 const KEY = 'sultana-draft-v3';
 
-const TITLES = { us: ['Pengguna & Aktivitas'], rw: ['Riwayat Dokumen'], st: ['Stok Unit'], sk: ['Surat Konfirmasi Unit'], su: ['Surat Pemesanan Unit'], kw: ['Kwitansi Pembayaran'], tt: ['Tanda Terima'], sp: ['Syarat dan Ketentuan Surat Pesanan'] };
+const TITLES = { lp: ['Laporan Penjualan'], us: ['Pengguna & Aktivitas'], rw: ['Riwayat Dokumen'], st: ['Stok Unit'], sk: ['Surat Konfirmasi Unit'], su: ['Surat Pemesanan Unit'], kw: ['Kwitansi Pembayaran'], tt: ['Tanda Terima'], sp: ['Syarat dan Ketentuan Surat Pesanan'] };
 const PV_FORMS = { sk: true, su: true, kw: true, tt: true, sp: true };
 let curTab = 'sk';
 try { const saved = localStorage.getItem('sultana-tab'); if (saved && TITLES[saved]) curTab = saved; } catch {}
@@ -604,10 +678,13 @@ const setTab = (t) => {
   document.querySelectorAll('#tabs button').forEach((b) => b.classList.toggle('on', b.dataset.t === t));
   forms.forEach((f) => f.classList.toggle('on', f.id === t));
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('on', v.id === t));
-  if (t === 'rw') loadDocs(); if (t === 'st') loadUnits(); if (t === 'us') loadUsers();
+  if (t === 'lp') loadReport().catch((e) => console.error(e)); if (t === 'rw') loadDocs(); if (t === 'st') loadUnits(); if (t === 'us') loadUsers();
   $('#ttl').textContent = TITLES[t][0];
   if ($('#pvToggle')) $('#pvToggle').style.display = PV_FORMS[t] ? '' : 'none';
   setPv(!!PV_FORMS[t] && pvWanted);
+  noteKind = ''; setNote(null, '');
+  $('#pvGo').classList.remove('blocked'); $('#pvReset').hidden = !document.querySelector('#' + t + ' .reset');
+  if (PV_FORMS[t] && document.getElementById(t)) updateState(document.getElementById(t));
 };
 $('#tabs').onclick = (e) => {
   const btn = e.target.closest('button'); if (!btn) return;
@@ -634,7 +711,7 @@ addEventListener('keydown', (e) => e.key === 'Escape' && setNav(false));
 function toJSON(form) {
   const out = {};
   for (const el of form.elements) {
-    if (!el.name || (el.type === 'radio' && !el.checked)) continue;
+    if (!el.name || el.disabled || (el.type === 'radio' && !el.checked)) continue;
     const parts = el.name.split('.'); let o = out;
     parts.slice(0, -1).forEach((p) => (o = o[p] ??= {}));
     o[parts.at(-1)] = el.value;
@@ -668,25 +745,265 @@ async function refreshNo() {
   try {
     const t = $('#sk input[name=tanggal]').value || todayISO();
     const { no } = await (await fetch('/api/next-number?tanggal=' + t)).json();
-    document.querySelectorAll('.autono').forEach((i) => (i.value = no));
+    document.querySelectorAll('.autono').forEach((i) => { if (!(EDIT && EDIT.form === i.form.id)) i.value = no; });
     draw();
   } catch {}
 }
 
 // Always clear forms on refresh
 try { localStorage.removeItem(KEY); } catch {}
-forms.forEach((f) => { f.reset(); f.querySelectorAll('.addon-list').forEach((l) => (l.innerHTML = '')); });
 
 setDate(); refreshNo(); document.querySelectorAll('input[name=tanggal]').forEach((i) => i.addEventListener('change', refreshNo));
 setTimeout(() => draw(), 50);
 
-document.querySelectorAll('.reset').forEach((b) => (b.onclick = () => {
-  b.form.reset();
-  b.form.querySelectorAll('.addon-list').forEach((l) => (l.innerHTML = ''));
-  setDate(); refreshNo(); draw();
-}));
+document.querySelectorAll('.reset').forEach((b) => (b.onclick = () => resetForm(b.form)));
+
+
+/* ───────── form engine: conditions · payment schedule · uploads · required fields · edit mode ───────── */
+let EDIT = null; // { id, no, form } while a admin corrects a printed document
+const UPL = { ktp: 'KTP', npwp: 'NPWP', kk: 'Kartu Keluarga (KK)', rekening: 'Rekening Koran', nikah: 'Surat Nikah' };
+const JENIS_TAB = { 'surat-konfirmasi': 'sk', 'surat-pemesanan': 'su', kwitansi: 'kw', 'tanda-terima': 'tt' };
+
+function fieldVal(f, name) {
+  const c = f.querySelector('[name="' + name + '"]:checked'); if (c) return c.value;
+  const el = f.querySelector('[name="' + name + '"]');
+  return el && el.type !== 'radio' && !el.disabled ? el.value : '';
+}
+
+// [data-when="cara.tipe=kpr|tunai-bertahap"]: shown (and its fields enabled) only while the condition holds.
+function applyConditions(f) {
+  f.querySelectorAll('[data-when]').forEach((el) => {
+    const [name, vals] = el.dataset.when.split('=');
+    const on = vals.split('|').includes(fieldVal(f, name));
+    el.hidden = !on;
+    el.querySelectorAll('input, select, textarea').forEach((i) => { i.disabled = !on; });
+  });
+}
+
+/* payment schedule — rows come from the shared lib/schedule.js, same as the server and the printed table */
+const rpIn = (name, label) => '<input type="number" min="0" step="1000" name="' + name + '" placeholder="Jumlah (Rp)" data-label="Jumlah ' + label + '">';
+const dtIn = (name, label) => '<input type="date" name="' + name + '" data-label="Jatuh tempo ' + label + '">';
+const srow = (label, inner) => '<div class="srow"><span class="sl">' + label + '</span>' + inner + '</div>';
+
+function buildSched(f) {
+  const box = f.querySelector('.sched'); if (!box) return;
+  const cara = fieldVal(f, 'cara.tipe'), reservasi = box.dataset.reservasi === '1';
+  const keep = {}; box.querySelectorAll('[name]').forEach((el) => { keep[el.name] = el.value; });
+  const max = Schedule.MAX[cara] || 0, what = cara === 'kpr' ? 'uang muka' : 'angsuran';
+  let h = '<div class="shead"><span></span><span>Jatuh tempo</span><span>Jumlah (Rp)</span></div>';
+  if (reservasi) h += srow('Reservasi', dtIn('jadwal.reservasi.tanggal', 'Reservasi') + rpIn('jadwal.reservasi.jumlah', 'Reservasi'));
+  h += srow('Booking Fee', dtIn('jadwal.booking.tanggal', 'Booking Fee') + rpIn('jadwal.booking.jumlah', 'Booking Fee'));
+  if (cara === 'tunai-keras') h += srow('Pelunasan', '<input type="date" data-auto="pelunasan" readonly class="auto" tabindex="-1">' + rpIn('jadwal.pelunasan.jumlah', 'Pelunasan')) + '<p class="hint" style="margin:4px 0 0">Jatuh tempo pelunasan otomatis: 1 bulan setelah Booking Fee.</p>';
+  if (max) {
+    h += '<div class="scfg"><label>Jumlah ' + what + ' (maks. ' + max + ' kali)<input type="number" min="1" max="' + max + '" step="1" name="jadwal.kali" data-label="Jumlah ' + what + ' (1–' + max + ' kali)"></label>' +
+      '<label>Jatuh tempo pertama<input type="date" name="jadwal.mulai" data-label="Jatuh tempo pertama"></label>' +
+      '<label>Jumlah per kali (Rp)<input type="number" min="0" step="1000" id="schedPer" data-optional placeholder="isi semua baris sekaligus"></label></div>' +
+      '<div class="srows"></div><p class="hint" style="margin:4px 0 0">Jatuh tempo berikutnya otomatis berganti bulan, mengikuti tanggal pertama.</p>';
+    if (cara === 'kpr') h += srow('Pelunasan KPR', dtIn('jadwal.pelunasan.tanggal', 'Pelunasan KPR') + rpIn('jadwal.pelunasan.jumlah', 'Pelunasan KPR'));
+  }
+  box.innerHTML = h;
+  box.querySelectorAll('[name]').forEach((el) => { if (keep[el.name] !== undefined) el.value = keep[el.name]; });
+  rebuildRows(f);
+}
+// Only the instalment rows are rebuilt when the count changes, so the field being typed in keeps focus.
+function rebuildRows(f) {
+  const box = f.querySelector('.sched'), rows = box && box.querySelector('.srows'); if (!rows) return;
+  const cara = fieldVal(f, 'cara.tipe'), n = Schedule.clampKali(cara, fieldVal(f, 'jadwal.kali'));
+  const keep = {}; rows.querySelectorAll('[name]').forEach((el) => { keep[el.name] = el.value; });
+  const nm = cara === 'kpr' ? 'Uang Muka' : 'Angsuran';
+  rows.innerHTML = Array.from({ length: n }, (_, i) => srow(nm + ' ' + (i + 1) + '/' + n, '<input type="date" data-auto="cicilan' + (i + 1) + '" readonly class="auto" tabindex="-1">' + rpIn('jadwal.cicilan.' + i + '.jumlah', nm + ' ' + (i + 1) + '/' + n))).join('');
+  rows.querySelectorAll('[name]').forEach((el) => { if (keep[el.name] !== undefined) el.value = keep[el.name]; });
+  refreshSchedDates(f);
+}
+function refreshSchedDates(f) {
+  const box = f.querySelector('.sched'); if (!box) return;
+  Schedule.rows(toJSON(f), { reservasi: box.dataset.reservasi === '1' }).forEach((r) => {
+    const el = box.querySelector('[data-auto="' + r.key + '"]'); if (el) el.value = r.tanggal || '';
+  });
+}
+
+/* uploads (KTP, NPWP, …) */
+function buildUploads(f) {
+  f.querySelectorAll('.upl').forEach((box) => {
+    const kind = box.dataset.kind;
+    box.innerHTML = '<span class="ul">' + UPL[kind] + '</span><button type="button" class="ghost upl-pick">Pilih berkas</button><span class="us">Belum ada berkas</span>' +
+      '<a class="uv" target="_blank" rel="noopener" hidden>Lihat</a><button type="button" class="link del ux" hidden>Hapus</button>' +
+      '<input type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">' +
+      '<input type="hidden" name="files.' + kind + '" data-label="Unggah ' + UPL[kind] + '">';
+  });
+}
+function setUpload(box, info, fresh = true) {
+  const hid = box.querySelector('input[type=hidden]');
+  hid.value = info ? info.id : ''; hid.dataset.fresh = info && fresh ? '1' : '';
+  box.querySelector('.us').textContent = info ? info.filename + (info.size ? ' · ' + Math.max(1, Math.round(info.size / 1024)) + ' KB' : '') : 'Belum ada berkas';
+  const a = box.querySelector('.uv'); a.hidden = !info; if (info) a.href = '/api/uploads/' + info.id;
+  box.querySelector('.ux').hidden = !info; box.classList.toggle('done', !!info);
+  const f = box.closest('form'); if (f) updateState(f);
+}
+async function uploadFile(box, file) {
+  const us = box.querySelector('.us');
+  if (file.size > 8 * 1024 * 1024) { us.textContent = 'Berkas terlalu besar (maks. 8 MB)'; return; }
+  us.textContent = 'Mengunggah…';
+  try {
+    const r = await fetch('/api/uploads?kind=' + box.dataset.kind + '&name=' + encodeURIComponent(file.name), { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: file });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Gagal mengunggah');
+    setUpload(box, j);
+  } catch (e) { us.textContent = 'Gagal: ' + e.message; }
+}
+
+/* required fields: every control that applies must be filled/chosen before a document can be printed */
+function labelOf(el) {
+  if (el.dataset.label) return el.dataset.label;
+  if (el.type === 'radio') { const g = el.closest('.radios'); return (g && g.dataset.label) || el.name; }
+  const lb = el.closest('label');
+  if (lb) { const t = [...lb.childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join(' ').trim().replace(/\s*\(.*\)\s*$/, ''); if (t) return t; }
+  return el.name;
+}
+function missingOf(f) {
+  const out = [], seen = new Set();
+  for (const el of f.elements) {
+    if (!el.name || el.disabled || el.readOnly || el.dataset.optional !== undefined || ['button', 'submit', 'file', 'reset'].includes(el.type)) continue;
+    if (el.closest('[hidden]')) continue;
+    if (el.type === 'radio') { if (seen.has(el.name)) continue; seen.add(el.name); if (!f.querySelector('[name="' + el.name + '"]:checked')) out.push({ el, label: labelOf(el) }); continue; }
+    const v = String(el.value).trim();
+    let bad = v === '';
+    if (!bad && el.type === 'number') { const n = Number(v); bad = !(n > 0) || (el.max !== '' && n > Number(el.max)) || (el.min !== '' && n < Number(el.min) && Number(el.min) > 0); if (!bad && el.step === '1') bad = !Number.isInteger(n); }
+    if (!bad && el.type === 'email') bad = !/.+@.+\..+/.test(v);
+    if (bad) out.push({ el, label: labelOf(el) });
+  }
+  return out;
+}
+let noteKind = '';
+function setNote(f, text, kind = '') {
+  noteKind = kind;
+  [f && f.querySelector('.msg'), $('#pvMsg')].forEach((m) => { if (m) { m.textContent = text; m.className = 'msg' + (kind ? ' ' + kind : ''); } });
+}
+// Re-evaluates the form: marks the Cetak buttons, and keeps a quiet hint under the preview.
+function updateState(f) {
+  if (!f || !f.dataset.api || f.id === 'sp') return;
+  const miss = missingOf(f);
+  f.querySelectorAll('.is-missing').forEach((n) => n.classList.remove('is-missing'));
+  if (f.dataset.flag) miss.forEach(({ el }) => (el.closest('label, .srow, .upl, .radios') || el).classList.add('is-missing'));
+  const blocked = miss.length > 0;
+  [f.querySelector('.go'), f.id === curTab ? $('#pvGo') : null].forEach((b) => b && b.classList.toggle('blocked', blocked));
+  f.dataset.missing = miss.length;
+  if (f.id === curTab && (!noteKind || noteKind === 'hint')) {
+    setNote(f, blocked ? miss.length + ' isian belum lengkap — semua wajib diisi sebelum dicetak' : '', blocked ? 'hint' : '');
+  }
+  return miss;
+}
+function flagMissing(f, miss) {
+  f.dataset.flag = '1'; updateState(f);
+  const names = miss.map((m) => m.label);
+  setNote(f, 'Lengkapi dulu (' + names.length + '): ' + names.slice(0, 6).join(', ') + (names.length > 6 ? ', dan ' + (names.length - 6) + ' lainnya' : ''), 'error');
+  const first = miss[0].el, target = first.closest('label, .srow, .upl, .radios') || first;
+  target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  if (first.focus && first.type !== 'hidden') setTimeout(() => first.focus({ preventScroll: true }), 300);
+}
+
+/* reset + edit mode */
+function resetForm(f) {
+  f.reset();
+  f.dataset.flag = '';
+  f.querySelectorAll('.addon-list').forEach((l) => (l.innerHTML = ''));
+  f.querySelectorAll('.upl').forEach((b) => setUpload(b, null));
+  buildSched(f); applyConditions(f);
+  if (EDIT && EDIT.form === f.id) leaveEdit(false);
+  setDate(); refreshNo(); updateState(f); draw();
+  noteKind = ''; setNote(f, ''); updateState(f);
+}
+function leaveEdit(reset = true) {
+  const f = EDIT && document.getElementById(EDIT.form);
+  EDIT = null; $('#editBanner').hidden = true;
+  document.querySelectorAll('.print-btn .lbl').forEach((l) => (l.textContent = 'Cetak'));
+  if (f && reset) resetForm(f);
+}
+function flatten(o, pre = '', out = {}) {
+  for (const [k, v] of Object.entries(o || {})) {
+    const key = pre ? pre + '.' + k : k;
+    if (Array.isArray(v)) v.forEach((x, i) => (x && typeof x === 'object' ? flatten(x, key + '.' + i, out) : (out[key + '.' + i] = x)));
+    else if (v && typeof v === 'object') flatten(v, key, out);
+    else out[key] = v;
+  }
+  return out;
+}
+function fillForm(f, data, files) {
+  const flat = flatten(data);
+  const apply = () => Object.entries(flat).forEach(([name, v]) => {
+    if (name.startsWith('files.') || name.startsWith('addons')) return;
+    f.querySelectorAll('[name="' + name + '"]').forEach((el) => { if (el.type === 'radio') el.checked = el.value === String(v); else if (el.type !== 'file') el.value = v ?? ''; });
+  });
+  apply(); applyConditions(f); buildSched(f); apply(); rebuildRows(f); apply(); refreshSchedDates(f);
+  const host = f.querySelector('.addon-list'); if (host) { host.innerHTML = ''; (data.addons || []).forEach((a) => addRow(host, a)); }
+  f.querySelectorAll('.upl').forEach((b) => { const info = (files || []).find((x) => x.kind === b.dataset.kind); setUpload(b, info || null, false); });
+  if (data.jumlah) $('#kwJumlah').dispatchEvent(new Event('input'));
+  f.querySelectorAll('input[name="harga"]').forEach((i) => i._hint && i._hint.refresh());
+}
+async function openEdit(id) {
+  const doc = await api('/api/documents/' + id);
+  const tab = JENIS_TAB[doc.jenis]; if (!tab) return;
+  if (EDIT) leaveEdit(false);
+  setTab(tab);
+  const f = document.getElementById(tab);
+  resetForm(f);
+  EDIT = { id: doc.id, no: doc.no, form: tab };
+  fillForm(f, doc.data, doc.files);
+  f.querySelectorAll('.autono').forEach((i) => (i.value = doc.no));
+  $('#editBanner').hidden = false; $('#editNo').textContent = doc.no;
+  document.querySelectorAll('.print-btn .lbl').forEach((l) => (l.textContent = 'Simpan & cetak ulang'));
+  updateState(f); draw(); scrollTo(0, 0);
+}
+$('#editCancel').onclick = () => leaveEdit(true);
+
+// Delegated events for every document form
+forms.forEach((f) => {
+  f.addEventListener('change', (e) => {
+    const el = e.target;
+    if (el.type === 'file') { const box = el.closest('.upl'); if (box && el.files[0]) uploadFile(box, el.files[0]); el.value = ''; return; }
+    if (el.name === 'cara.tipe') { applyConditions(f); buildSched(f); } else applyConditions(f);
+    updateState(f);
+  });
+  f.addEventListener('input', (e) => {
+    const el = e.target;
+    if (el.name === 'jadwal.kali') rebuildRows(f);
+    if (el.name === 'jadwal.mulai' || el.name === 'jadwal.booking.tanggal') refreshSchedDates(f);
+    if (el.id === 'schedPer') f.querySelectorAll('[name^="jadwal.cicilan."]').forEach((i) => { i.value = el.value; });
+    if (noteKind === 'error' || noteKind === 'done') noteKind = 'hint';
+    updateState(f);
+  });
+  f.addEventListener('click', (e) => {
+    const pick = e.target.closest('.upl-pick'); if (pick) { pick.closest('.upl').querySelector('input[type=file]').click(); return; }
+    const ux = e.target.closest('.ux');
+    if (ux) {
+      const box = ux.closest('.upl'), hid = box.querySelector('input[type=hidden]');
+      if (hid.dataset.fresh && hid.value) fetch('/api/uploads/' + hid.value, { method: 'DELETE' }).catch(() => {});
+      setUpload(box, null);
+    }
+  });
+});
+/* ───────── amount safety: scrolling must never change a number, and the amount is spelled out ───────── */
+// A focused number field changes by 1 on every mouse-wheel / trackpad tick (100.000.000 → 99.999.996 while scrolling the page).
+addEventListener('wheel', (e) => { const el = document.activeElement; if (el && el.type === 'number' && el === e.target) el.blur(); }, { passive: true, capture: true });
+// "Rp 100.000.000 — Seratus juta rupiah" under Harga Pengikatan, so a slip is visible before printing.
+function moneyHint(input) {
+  const label = input.closest('label'); if (!label) return;
+  const hint = document.createElement('small'); hint.className = 'mh'; label.insertAdjacentElement('afterend', hint);
+  const show = () => { const n = Math.floor(Number(input.value)); hint.textContent = n > 0 ? 'Rp ' + (rp(n) || '0') + ' — ' + terb(n) : ''; };
+  input.addEventListener('input', show); input.addEventListener('change', show);
+  input.form.addEventListener('reset', () => setTimeout(show, 0));
+  hint.refresh = show; input._hint = hint;
+}
+document.querySelectorAll('input[name="harga"]').forEach(moneyHint);
+
+function initForms() {
+  forms.forEach((f) => { f.reset(); f.querySelectorAll('.addon-list').forEach((l) => (l.innerHTML = '')); buildUploads(f); buildSched(f); applyConditions(f); });
+  setDate(); forms.forEach((f) => updateState(f)); refreshNo();
+}
 
 /* ───────── live preview: mirrors lib/docs.js suratKonfirmasiPage() ───────── */
+let FOOT = 'PT. Balla Sultana Samata  •  Jl. Paraikatte, Romang Polong, Kec. Somba Opu, Kab. Gowa, Sulawesi Selatan  •  Telp/WA 0877-8575-8656';
+fetch('/api/company').then((r) => r.json()).then((j) => { FOOT = j.footerText; try { draw(); } catch {} }).catch(() => {});
 let UT = { Deluxe: { kamar: 8, lb: '129', lt: '6,5x11' }, Executive: { kamar: 5, lb: '82', lt: '6,5x11' }, Premiere: { kamar: 10, lb: '145', lt: '7x11' } };
 fetch('/api/unit-types').then((r) => r.json()).then((j) => { UT = j; }).catch(() => {});
 const idNum = (n) => String(Math.round(n * 100) / 100).replace('.', ',');
@@ -743,6 +1060,18 @@ const NOTES = {
   sp: 'Tampilan dokumen baku Syarat dan Ketentuan Surat Pesanan.',
 };
 
+
+// Payment schedule: always one table; rows get denser as instalments grow (same rule as lib/docs.js jadwalTable()).
+function jadwalHtml(d, reservasi) {
+  const items = Schedule.rows(d, { reservasi: !!reservasi });
+  const n = items.length, dens = n > 12 ? 'jd-3' : n > 8 ? 'jd-2' : n > 5 ? 'jd-1' : '';
+  return '<table class="jd ' + dens + '"><tr><th>Keterangan</th><th>Tanggal Jatuh Tempo</th><th>Jumlah (Rp)</th></tr>' +
+    items.map((it) => '<tr><td>' + esc(it.label) + '</td><td>' + tglID(it.tanggal) + '</td><td>' + (rp(it.jumlah) || '') + '</td></tr>').join('') + '</table>';
+}
+const CARA_LBL = { 'tunai-keras': 'Tunai Keras', 'tunai-bertahap': 'Tunai Bertahap', kpr: 'KPR' };
+const SUMBER = { medsos: 'Medsos', referensi: 'Referensi', 'walk-in': 'Walk in', undangan: 'Undangan', 'lain-lain': 'Lain-lain' };
+const sumberText = (d) => { const l = SUMBER[d.sumber]; if (!l) return ''; return d.sumber === 'lain-lain' && String(d.sumberLain || '').trim() ? l + ': ' + String(d.sumberLain).trim() : l; };
+
 function draw() {
   if (!document.body.classList.contains('pv-on')) return;
   const paper = $('#paper');
@@ -772,13 +1101,12 @@ function draw() {
     '&nbsp;&nbsp;' + cb(d.listrik === 'rumah') + ' Rumah Tinggal 2200 Watt' + '&nbsp;'.repeat(12) + cb(d.listrik === 'kost') + ' Rumah Kost 1300 Watt, @ 900 Watt Per Kamar',
     ...addons.map((a) => '- ' + esc(a)),
   ];
-  const jrow = (label, r) => '<tr><td>' + label + '</td><td>' + (tglID(r?.tanggal) || '') + '</td><td>' + (rp(r?.jumlah) || '') + '</td></tr>';
   const sig = (n) => '(' + (n && n.trim() ? '&nbsp;' + esc(n.trim()) + '&nbsp;' : '____________________') + ')';
   const harga = d.harga ? 'Rp. ' + rp(d.harga) + (terb(d.harga) ? '&nbsp;&nbsp;(' + terb(d.harga) + ')' : '') : 'Rp. <span class="ph" style="min-width:230px"></span>';
 
   $('#paper').innerHTML =
-    '<div class="lamp">Rangkap 1</div>' +
-    '<div class="kop"><img src="/assets/logo-mark.png" alt="Sultana Living">' +
+    '<div class="lamp-wrap"><span class="lamp">Rangkap 1</span></div>' +
+    '<div class="kop"><img src="/assets/logo-color.png" alt="Sultana Living">' +
       '<div class="kmid"><h2>' + meta.heading + '</h2>' +
       '<p class="no">No.&nbsp; <b>' + ($('.autono', form)?.value || '') + '</b></p></div>' +
       '<div class="kside"></div></div>' +
@@ -789,7 +1117,7 @@ function draw() {
       row('NIK &amp; NPWP', ':', ph(d.nikNpwp, 300)) +
       row('Telp/HP', ':', ph(d.telp, 300)) +
       row('Email', ':', ph(d.email, 300)) +
-      row('Sumber Informasi', ':', ph(d.sumber, 300)) +
+      row('Sumber Informasi', ':', ph(sumberText(d), 300)) +
     '</table>' +
     '<p>-selanjutnya disebut sebagai <b>PEMESAN</b>.</p>' +
     '<p>Dengan ini sepakat dan setuju untuk memesan :</p>' +
@@ -803,22 +1131,17 @@ function draw() {
     '<table class="kv" style="margin-top:10px">' + inc.map((r, i) => row(i === 0 ? 'Harga Termasuk' : '', i === 0 ? ':' : '', r[0], r[1])).join('') + inc2.map((t) => '<tr><td class="k"></td><td class="c"></td><td colspan="2">' + t + '</td></tr>').join('') + '</table>' +
     '<div class="hb">CARA PEMBAYARAN</div>' +
     '<table class="kv">' +
-      row(cb(cara.tipe === 'tunai-keras') + ' Tunai Keras', '=', 'dilunasi paling lambat 1 bulan dari Tanda Jadi / Booking Fee') +
-      row(cb(cara.tipe === 'tunai-bertahap') + ' Tunai Bertahap', '=', cara.tipe === 'tunai-bertahap' && cara.ket ? esc(cara.ket) : '.............................') +
-      row(cb(cara.tipe === 'kpr') + ' KPR', '=', cara.tipe === 'kpr' && cara.ket ? esc(cara.ket) : '.............................') +
+      (CARA_LBL[cara.tipe] ? row(CARA_LBL[cara.tipe], '=', Schedule.describe(d) ? esc(Schedule.describe(d)) : '.............................') : row('', '=', '.............................')) +
     '</table>' +
     '<div class="hb">JADWAL PEMBAYARAN</div>' +
-    '<table class="jd"><tr><th>Keterangan</th><th>Tanggal Jatuh Tempo</th><th>Jumlah (Rp)</th></tr>' +
-      (meta.reservasi ? jrow('Reservasi', j.reservasi) : '') + jrow('Booking Fee', j.booking) +
-      jrow('Uang Muka (' + (j.dpKali || '…') + ' Kali)', j.dp) + jrow('Pelunasan KPR', j.kpr) +
-    '</table>' +
+    jadwalHtml(d, meta.reservasi) +
     '<p class="just">Pemesan telah membaca, mengerti dan menyetujui seluruh ketentuan yang tercantum dalam syarat-syarat dan ketentuan-ketentuan ' + meta.label + ' yang tercantum di belakang halaman ini.</p>' +
-    '<p>Gowa, ' + (tglID(d.tanggal) || '') + '</p>' +
-    '<table class="sig"><tr><td>Pemesan</td><td>Penerima Pesanan</td><td>Sales</td></tr>' +
+    '<p class="push">Gowa, ' + (tglID(d.tanggal) || '') + '</p>' +
+    '<table class="sig' + (Schedule.rows(d, { reservasi: !!meta.reservasi }).length > 12 ? ' sig-tight' : '') + '"><tr><td>Pemesan</td><td>Penerima Pesanan</td><td>Sales</td></tr>' +
     '<tr class="sp"><td></td><td></td><td></td></tr>' +
     '<tr><td>' + sig(d.nama) + '</td><td>' + sig(d.penerima) + '</td><td>' + sig(d.sales) + '</td></tr></table>' +
     '<p class="lamp-note">•&nbsp;&nbsp;Rangkap 1 : Pemesan, Rangkap 2 : Penerima Pesanan, Rangkap 3 : Sales</p>' +
-    '<div class="pg-footer">PT. Balla Sultana Samata&nbsp; •&nbsp; Jl. Paraikatte, Romang Polong, Kec. Somba Opu, Kab. Gowa, Sulawesi Selatan</div>';
+    '<div class="pg-footer">' + esc(FOOT) + '</div>';
   fit();
 }
 
@@ -835,11 +1158,12 @@ function drawKwitansi() {
   const fo = (label, inner, style) => '<div class="mf"' + (style ? ' style="' + style + '"' : '') + '><small>' + label + '</small><span>' + inner + '</span></div>';
 
   $('#paper').innerHTML =
-    '<div class="mb"><img src="/assets/logo-mark.png" alt="Sultana Living"><div class="mt"><h2>KWITANSI</h2><p class="mn">No.&nbsp; <b>' + esc($('.autono', form)?.value || '—') + '</b></p></div></div>' +
+    '<div class="mb"><img src="/assets/logo-color.png" alt="Sultana Living"><div class="mt"><h2>KWITANSI</h2><p class="mn">No.&nbsp; <b>' + esc($('.autono', form)?.value || '—') + '</b></p></div></div>' +
     f('Telah terima dari', d.terimaDari) +
     fo('Uang sejumlah', words ? '<i>' + esc(words) + '</i>' : '') +
     '<div class="mrow" style="margin-top:14px">' + fo('Jenis pembayaran', '<span class="mopt on">' + (transfer ? 'TRANSFER / CEK BANK' : 'TUNAI') + '</span>', 'flex:3') +
       (transfer ? f('Bank', d.bank, 'flex:1') + f('Tanggal', tglID(d.tglTransfer), 'flex:1') : '') + '</div>' +
+    f('Cair di rekening', d.rekening === 'pt-balla' ? 'PT. Balla Sultana Samata  ·  BTN KCP CIPAYUNG  ·  01057-01-30-000035-8' : '') +
     '<div class="mrow">' + fo('Untuk pembayaran', '<span class="mopt on">' + (booking ? 'BOOKING FEE' : 'UANG MUKA (DP)') + '</span>', 'flex:3') +
       (booking ? '' : f('DP ke-', d.dpKe, 'flex:.7')) + f('Nomor unit', d.noUnit, 'flex:1.3') + '</div>' +
     '<p style="font-size:9pt;color:#7A857D;margin:2px 0 14px">1 Unit Perumahan Sultana Living</p>' +
@@ -847,7 +1171,7 @@ function drawKwitansi() {
     '<p class="gowa" style="margin-top:14px">Gowa, ' + (tglID(d.tanggal) || '_______________') + '</p>' +
     '<div class="msig" style="margin-top:16px"><div style="text-align:left;align-self:flex-end;font-style:italic;font-size:8pt;color:#7A857D">Pembayaran dengan BG/Cek<br>dianggap sah setelah dicairkan</div>' +
       '<div><small>Penerima Pembayaran</small><div class="ln">' + esc((d.penandatangan || '').trim()) + '</div><div class="sub">Nama Jelas</div></div></div>' +
-    '<div class="pg-footer">PT. Balla Sultana Samata&nbsp; •&nbsp; Jl. Paraikatte, Romang Polong, Kec. Somba Opu, Kab. Gowa, Sulawesi Selatan</div>';
+    '<div class="pg-footer">' + esc(FOOT) + '</div>';
 }
 
 function drawTandaTerima() {
@@ -858,7 +1182,7 @@ function drawTandaTerima() {
   const sig = (head, name) => '<div><small>' + head + '</small><div class="ln">' + esc((name || '').trim()) + '</div><div class="sub">Nama Jelas</div></div>';
 
   $('#paper').innerHTML =
-    '<div class="mb"><img src="/assets/logo-mark.png" alt="Sultana Living"><div class="mt"><h2>TANDA TERIMA</h2><p class="mn">No.&nbsp; <b>' + esc($('.autono', form)?.value || '—') + '</b></p></div></div>' +
+    '<div class="mb"><img src="/assets/logo-color.png" alt="Sultana Living"><div class="mt"><h2>TANDA TERIMA</h2><p class="mn">No.&nbsp; <b>' + esc($('.autono', form)?.value || '—') + '</b></p></div></div>' +
     box('Kepada Yth', [d.kepada]) + box('Alamat', L(d.alamat, 3)) + box('U.P', L(d.up, 2)) +
     '<p style="margin:14px 0 6px;font-style:italic">Bersama ini kami kirimkan/terima :</p>' +
     '<div class="mrow">' + box('Surat No', [d.suratNo], 'flex:1') + box('Kwitansi', [d.kwitansi], 'flex:1') + '</div>' +
@@ -866,41 +1190,22 @@ function drawTandaTerima() {
     box('Keterangan', L(d.keterangan, 6), 'background:#F1F4EF;padding:4px 8px;margin-top:12px') +
     '<p class="gowa" style="margin-top:14px">' + (d.tanggal ? 'Gowa, ' + tglID(d.tanggal) : '……………….,  …………………') + '</p>' +
     '<div class="msig">' + sig('Yang Menerima', d.penerima) + sig('Yang Menyerahkan', d.penyerah) + '</div>' +
-    '<div class="pg-footer">PT. Balla Sultana Samata&nbsp; •&nbsp; Jl. Paraikatte, Romang Polong, Kec. Somba Opu, Kab. Gowa, Sulawesi Selatan</div>';
+    '<div class="pg-footer">' + esc(FOOT) + '</div>';
 }
 
+// S&K Surat Pesanan preview: rendered from the very same data the .docx uses (GET /api/terms),
+// two columns like the original sheet.
+let TERMS = null;
+fetch('/api/terms').then((r) => r.json()).then((j) => { TERMS = j; try { draw(); } catch {} }).catch(() => {});
 function drawSyaratPesanan() {
-  // Static preview mirroring lib/terms.js SURAT_PESANAN
-  $('#paper').innerHTML =
-    '<h2>SYARAT DAN KETENTUAN SURAT PESANAN</h2>' +
-    '<ol>' +
-      '<li>Seluruh data-data dalam Surat Pesanan (termasuk alamat dan nama) harus diisi dengan lengkap, jelas dan benar serta melampirkan fotokopi identitas diri (E-KTP) yang benar dan jelas. Penerima Pesanan tidak bertanggung jawab apapun apabila ternyata satu atau lebih data atau dokumen yang diperlukan ternyata tidak/kurang lengkap/benar atau dipalsukan, termasuk tidak sampainya surat pemberitahuan kepada Pemesan atau Surat Pesanan ini tidak ditandatangani sendiri oleh Pemesan dan/atau orang/pihak yang berwenang atau tidak dilaksanakannya satu atau lebih syarat atau ketentuan dalam Surat Pesanan ini.</li>' +
-      '<li>Harga Pengikatan dan cara pembayarannya (termasuk jadwal pembayaran) yang telah disepakati mengikat Pemesan dan Penerima Pesanan, dimana jadwal pembayaran tidak dikaitkan dengan progress pembangunan.</li>' +
-      '<li>Apabila dalam waktu 7 (tujuh) hari kalender setelah tanggal pembayaran uang tanda jadi pemesanan (booking fee), Pemesan tidak atau terlambat melaksanakan kewajiban pembayaran berikutnya karena sebab atau alasan apapun, maka Pemesan dan Penerima Pesanan sepakat dan setuju sekarang dan untuk nanti pada waktunya membatalkan secara otomatis Surat Pesanan ini dengan melepaskan ketentuan dalam Pasal 1266 dan Pasal 1267 Kitab Undang-undang Hukum Perdata (yang mana pengakhiran secara sepihaknya tidak memerlukan Keputusan Pengadilan) dan seluruh pembayaran yang telah diterima oleh Penerima Pesanan dinyatakan oleh Pemesan tetap menjadi haknya Penerima Pesanan.</li>' +
-      '<li>Unit Pesanan yang telah dipesan, tidak dapat ditukar dengan Unit lain.</li>' +
-      '<div class="t-head">Fasilitas Kredit Bank (KPR)</div>' +
-      '<li>Pemesan sepakat dan mengakui bahwa Penerima Pesanan bertindak selaku pihak yang hanya mempertemukan Pemesan dengan Bank dan oleh karenanya Penerima Pesanan tidak menjamin disetujui atau tidaknya permohonan KPR dari Bank Pemberi Kredit. Untuk itu, segala akibat dan resiko yang berkaitan dengan permohonan dan pemberian fasilitas pinjaman dan/atau pemesanan Unit Pesanan merupakan beban dan tanggung jawab Pemesan sepenuhnya serta tidak dapat dikaitkan atau dibebankan kepada Penerima Pesanan karena sebab atau alasan apapun. Pemesan dengan ini membebaskan Penerima Pesanan atas segala akibat dan resiko yang timbul sehubungan dengan fasilitas kredit Pemesan tersebut.</li>' +
-      '<li>Pemesan wajib melengkapi data untuk persyaratan KPR selambat-lambatnya 14 (empat belas) hari kerja setelah pembayaran 10% (sepuluh persen) dari Harga Pengikatan. Dengan lewatnya jangka waktu tersebut maupun toleransi waktu namun Pemesan belum melengkapi data untuk persyaratan KPR tersebut, maka Pemesan dianggap telah membatalkan Pemesanan Unit.</li>' +
-      '<li>Apabila fasilitas KPR disetujui namun Pemesan wajib menambah uang muka, maka atas pemberitahuan tertulis Penerima Pesanan, Pemesan wajib menambah uang muka tersebut selambat-lambatnya 14 (empat belas) hari kerja. Dengan lewatnya jangka waktu tersebut maupun toleransi namun Pemesan belum melunasi kekurangan Uang Muka, maka Pemesan dianggap telah membatalkan Pemesanan unit.</li>' +
-      '<li>Apabila lewat waktu Penandatangan Akad Kredit yang telah ditentukan namun Pemesan belum menandatangani Akad Kredit, maka Pemesan akan dikenakan biaya administrasi sebesar 1 o/oo (satu per mil) per hari dari pemunduran jadwal penandatanganan yang dihitung dari Plafond Kredit yang disetujui oleh Bank. Dengan lewatnya jangka waktu tersebut maupun toleransi namun Pemesan belum menandatangani Akad Kredit, maka Pemesan dianggap telah membatalkan Pemesanan unit.</li>' +
-      '<li>Apabila permohonan KPR ditolak oleh Bank karena sebab alasan apapun juga, Pemesan wajib meneruskan pembayaran melalui tunai keras atau tunai bertahap/angsuran sesuai dengan ketentuan-ketentuan yang berlaku. Apabila Pemesan tidak melakukan hal tersebut, maka Pemesan dianggap telah membatalkan Pemesanan Unit.</li>' +
-      '<div class="t-head">Keterlambatan dan Pembatalan</div>' +
-      '<li>Apabila Pemesan tidak atau terlambat membayar atau kurang membayar uang muka dan/atau angsuran dan/atau kewajiban pembayaran lain pada tanggal jatuh tempo kewajiban pembayaran, maka Pemesan sepakat untuk dikenakan denda keterlambatan sebesar 1 o/oo (satu per mil) per hari dari jumlah uang muka dan/atau angsuran dan/atau kewajiban dan dihitung sejak tanggal jatuh tempo hingga dilakukannya pembayaran secara penuh maksimal 30 (tigapuluh) hari kalender. Dengan lewatnya jangka waktu tersebut namun Pemesan belum membayar kewajibannya secara penuh, maka Pemesan dianggap telah membatalkan Pemesanan Unit.</li>' +
-      '<li>Batas waktu toleransi keterlambatan atas kewajiban setiap pembayaran dan/atau kewajiban melengkapi dokumen adalah maksimal 30 (tigapuluh) hari kalender terhitung sejak tanggal jatuh tempo. Untuk itu, dengan lewatnya waktu saja, maka Pemesan dianggap membatalkan secara sepihak Surat Pesanan ini. Pemesan dan Penerima Pesanan sepakat untuk mengesampingkan/melepaskan ketentuan dalam Pasal 1266 dan Pasal 1267 Kitab Undang-undang Hukum Perdata (yang mana pengakhiran secara sepihaknya tidak memerlukan Keputusan Pengadilan).</li>' +
-      '<li>Apabila pembatalan Unit Pesanan sebagaimana tercantum dalam Surat Pesanan ini atas kemauan Pemesan dan/atau akibat kesalahan/kelalaian Pemesan, maka Pemesan sepakat :<ul class="t-sub"><li>Uang tanda jadi pemesanan (booking fee) tetap menjadi milik Penerima Pesanan dan akan membayar biaya administrasi pembatalan sebesar 50% (limapuluh persen) dari Uang Muka yang telah dibayarkan.</li><li>Pengembalian sisa uang Pemesan setelah dikurangi PPN (jika ada), denda, biaya administrasi dan kewajiban pembayaran lainnya yang belum dibayarkan Pemesan kepada Penerima Pesanan (jika ada) akan dilakukan oleh Penerima Pesanan kepada Pemesan setelah adanya pembeli baru atas unit yang dipesan.</li></ul></li>' +
-      '<li>Pembatalan akibat penolakan bank maka uang tanda jadi pemesanan (booking fee) tetap menjadi milik Penerima Pesanan dan Uang Muka yang telah dibayarkan akan dikembalikan seluruhnya setelah adanya Pembeli baru atas unit yang dipesan.</li>' +
-      '<div class="t-head">Cara Pembayaran.</div>' +
-      '<li>Pembayaran dengan menggunakan cek/bilyet giro baru dianggap sah apabila seluruh dananya telah diterima dengan baik dan untuk itu Pemesan akan menerima bukti pembayaran (kuitansi) resmi dari Penerima Pesanan.</li>' +
-      '<li>Biaya Penolakan cek/bilyet giro dari Pemesan ditetapkan sebesar Rp.250.000 (dua ratus lima puluh ribu rupiah) dan biaya materai sampai pembayaran lunas, seluruhnya ditanggung oleh Pemesan.</li>' +
-      '<li>Pemesan, tanpa persetujuan tertulis dari Penerima Pesanan, tidak diperkenankan mengubah cara pembayaran dan/atau tanggal Pembayaran.</li>' +
-      '<div class="t-head">Pembayaran</div>' +
-      '<li>Semua pembayaran secara transfer atau cek atau bilyet giro wajib dilakukan secara penuh tanpa potongan apapun dan langsung kepada :<table class="t-acc"><tr><td class="k">Atas nama</td><td class="c">:</td><td>PT. Balla Sultana Samata</td></tr><tr><td class="k">Bank</td><td class="c">:</td><td>BTN KCP CIPAYUNG</td></tr><tr><td class="k">Acc</td><td class="c">:</td><td>01057-01-30-000035-8</td></tr></table></li>' +
-      '<li>Segala biaya yang timbul sehubungan dengan pembayaran secara transfer (termasuk biaya transfer) merupakan beban dan wajib dibayar oleh Pemesan.</li>' +
-      '<li>Serah Terima unit dapat dilakukan jika Pemesan telah melunasi seluruh kewajiban pembayaran yang akan dilaksanakan 12 (dua belas) bulan setelah pelunasan atau angsuran pertama. Untuk itu Penerima Pesanan akan memberikan surat undangan penandatanganan Berita Acara Serah Terima (BAST) kepada Pemesan.<ul class="t-sub"><li>Dalam hal terjadi keterlambatan serah terima unit meskipun telah melewati masa toleransi selama 6 (enam) bulan, maka penerima pesanan akan dikenakan denda keterlambatan sebesar 1 o/oo (satu permil per hari) maksimal 3% dari nilai sisa pekerjaan pembangunan yang belum diselesaikan</li></ul></li>' +
-      '<li>Pemesan tidak dapat mengalihkan atau memindahkan seluruh atau sebagian hak-hak dan kewajiban-kewajiban dalam Surat Pesanan ini kepada orang/pihak lain, termasuk menyewakan, meminjamkan haknya kepada orang lain. Apabila hal tersebut dilanggar, maka segala akibat (konsekuensi hukum) yang timbul termasuk tetapi tidak terbatas pada ketentuan perpajakan, sepenuhnya menjadi beban dan tanggung jawab Pemesan.</li>' +
-      '<li>Hal-hal yang tidak atau belum diatur dalam Surat Pesanan ini akan diatur lebih lanjut dalam Perjanjian Pengikatan Jual Beli dan/atau perjanjian (-perjanjian) lain yang dibuat sehubungan dengan Unit Pesanan di Perumahan Sultana Living.</li>' +
-    '</ol>' +
-    '<div class="t-close">Demikian Surat Pesanan beserta Syarat dan Ketentuan ini dibuat dengan maksud untuk terikat oleh hukum, setelah Surat Pesanan beserta Syarat dan ketentuan dibaca secara jelas serta dimengerti isinya, untuk itu akan ditaati dan dilaksanakan oleh Pemesan dan Penerima Pesanan dan ditandatangani sebagai tanda persetujuannya.</div>';
+  if (!TERMS) { $('#paper').innerHTML = '<p>Memuat…</p>'; return; }
+  const t = TERMS.pesanan, LETTERS = 'abcdefghijklmnopqrstuvwxyz';
+  const acc = '<table class="t-acc2">' + TERMS.account.map(([k, v]) => '<tr><td>' + esc(k) + '</td><td>:</td><td>' + esc(v) + '</td></tr>').join('') + '</table>';
+  const sub = (sb, j) => { const o = typeof sb === 'string' ? { text: sb } : sb;
+    return '<div class="t-sub"><span>' + LETTERS[j] + '.</span><div>' + esc(o.text) + (o.account ? acc : '') + (o.para ? '<p>' + esc(o.para) + '</p>' : '') + (o.dashes || []).map((d) => '<p>- ' + esc(d) + '</p>').join('') + '</div></div>'; };
+  const items = t.items.map((raw, i) => { const it = typeof raw === 'string' ? { text: raw } : raw;
+    return '<div class="t-it"><span>' + (i + 1) + '.</span><div>' + esc(it.text) + (it.subs || []).map(sub).join('') + (it.dashPara ? '<p>' + esc(it.dashPara) + '</p>' : '') + '</div></div>'; }).join('');
+  $('#paper').innerHTML = '<div class="t-cols"><h2>' + esc(t.title) + '</h2>' + items + '</div><p class="t-close">' + esc(t.closing) + '</p>';
 }
 
 Object.keys(PV_FORMS).forEach((id) => {
@@ -916,13 +1221,16 @@ const JENIS_LABEL = { 'surat-konfirmasi': 'Surat Konfirmasi Unit', 'surat-pemesa
 const api = async (url, opt) => { const r = await fetch(url, opt); const t = await r.text(); let j; try { j = JSON.parse(t); } catch { j = null; } if (!r.ok) throw new Error((j && j.error) || t || r.statusText); return j; };
 const post = (url, body) => api(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
 let units = [];
+let stPage = 1; const ST_PER = 12; // units per page
 
 async function loadDocs() {
   const p = new URLSearchParams({ q: $('#rwQ').value, jenis: $('#rwJ').value });
   const rows = await api('/api/documents?' + p);
-  $('#rwTbl tbody').innerHTML = rows.map((r) => '<tr><td class="mono">' + esc(tglID(r.tanggal) || r.created_at.slice(0, 10)) + '</td><td class="mono"><b>' + esc(r.no) + '</b></td><td>' + esc(JENIS_LABEL[r.jenis] || r.jenis) + '</td><td>' + esc(r.nama) + '</td><td>' + esc(r.no_unit) + '</td><td class="r mono">' + (rp(r.jumlah) || '') + '</td><td>' + esc(r.created_by || '') + '</td><td class="r"><a class="link" href="/api/documents/' + r.id + '/pdf" target="_blank" rel="noopener">Cetak PDF</a><a class="link" href="/api/documents/' + r.id + '/download">Word</a></td></tr>').join('');
+  const files = (r) => (r.files || []).map((x) => '<a class="link" href="/api/uploads/' + x.id + '" target="_blank" rel="noopener" title="' + esc(x.filename) + '">' + esc(UPL[x.kind] || x.kind) + '</a>').join(' ');
+  $('#rwTbl tbody').innerHTML = rows.map((r) => '<tr><td class="mono">' + esc(tglShortID(r.tanggal) || r.created_at.slice(0, 10)) + '</td><td class="mono"><b>' + esc(r.no) + '</b>' + (r.edited ? ' <span class="pill" title="Pernah dikoreksi admin">diedit</span>' : '') + '</td><td>' + esc(JENIS_LABEL[r.jenis] || r.jenis) + '</td><td>' + esc(r.nama) + '</td><td>' + esc(r.no_unit) + '</td><td class="r mono">' + (rp(r.jumlah) || '') + '</td><td class="files">' + files(r) + '</td><td>' + esc(r.created_by || '') + '</td><td class="r nowrap"><a class="link" href="/api/documents/' + r.id + '/pdf" target="_blank" rel="noopener">Cetak PDF</a><a class="link" href="/api/documents/' + r.id + '/download">Word</a>' + (ME.role === 'admin' ? '<button type="button" class="link" data-edit-doc="' + r.id + '">Edit</button>' : '') + '</td></tr>').join('');
   $('#rwEmpty').style.display = rows.length ? 'none' : '';
 }
+$('#rwTbl').addEventListener('click', (e) => { const id = e.target.dataset.editDoc; if (id) openEdit(id).catch((err) => alert(err.message)); });
 let rwT; $('#rwQ').oninput = () => { clearTimeout(rwT); rwT = setTimeout(loadDocs, 200); }; $('#rwJ').onchange = loadDocs;
 
 async function loadUnits() {
@@ -938,22 +1246,46 @@ function renderUnits() {
     .map(([l, v, sub]) => '<div class="card"><span>' + l + '</span><b>' + v + '</b><small>' + sub + '</small></div>').join('');
   const f = $('#stF').value, t = $('#stT').value;
   const rows = units.filter((u) => (!f || u.status === f) && (!t || u.type === t));
-  $('#stTbl').innerHTML = rows.map((u) => {
+  const pages = Math.max(1, Math.ceil(rows.length / ST_PER));
+  stPage = Math.min(Math.max(1, stPage), pages);
+  const shown = rows.slice((stPage - 1) * ST_PER, stPage * ST_PER);
+  $('#stTbl').innerHTML = shown.map((u) => {
     const spec = UT[u.type] || {};
     const admin = ME.role === 'admin';
     return '<div class="uc">' +
       '<div class="uc-top"><div><span class="uc-no">' + esc(u.no_unit) + '</span><span class="uc-type">' + esc(u.type || '—') + '</span></div>' +
         '<span class="pill st-' + u.status + '">' + u.status[0].toUpperCase() + u.status.slice(1) + '</span></div>' +
       '<div class="uc-specs"><div><small>Luas Tanah</small><span>' + (luasText(spec.lt) || '—') + '</span></div><div><small>Luas Bangunan</small><span>' + (luasText(spec.lb) || '—') + '</span></div></div>' +
-      (u.status !== 'tersedia' ? '<div class="uc-who">' + (u.pemesan ? '<b>' + esc(u.pemesan) + '</b>' : '<span class="hint">Tanpa nama</span>') + (u.doc_no ? '<em>' + esc(u.doc_no) + '</em>' : '') + '</div>' : '') +
+      (u.status !== 'tersedia' ? '<div class="uc-who"><small>' + (u.status === 'terjual' ? 'Pembeli' : 'Pemesan') + '</small>' + (u.pemesan_terakhir ? '<b>' + esc(u.pemesan_terakhir) + '</b>' : '<span class="hint">Tanpa nama</span>') + (u.booking_no || u.doc_no ? '<em>' + esc(u.booking_no || u.doc_no) + '</em>' : '') + '</div>' +
+        '<div class="uc-val"><small>Nilai</small><b>' + (u.nilai ? 'Rp ' + rp(u.nilai) : '—') + '</b></div>' : '') +
       '<div class="uc-foot">' +
         '<select data-id="' + u.id + '" class="stSel"' + (admin ? '' : ' disabled') + '>' + ['tersedia', 'dipesan', 'terjual'].map((x) => '<option value="' + x + '"' + (x === u.status ? ' selected' : '') + '>' + x[0].toUpperCase() + x.slice(1) + '</option>').join('') + '</select>' +
         (admin ? '<button type="button" class="link" data-edit="' + u.id + '">Edit</button><button type="button" class="link del" data-del="' + u.id + '" data-no="' + esc(u.no_unit) + '">Hapus</button>' : '') +
       '</div></div>';
   }).join('');
   $('#stEmpty').style.display = units.length ? 'none' : '';
+  $('#stNone').style.display = units.length && !rows.length ? '' : 'none';
+  renderPager(rows.length, pages);
 }
-$('#stF').onchange = $('#stT').onchange = renderUnits;
+function renderPager(total, pages) {
+  const el = $('#stPager');
+  if (!total) { el.innerHTML = ''; return; }
+  const from = (stPage - 1) * ST_PER + 1, to = Math.min(total, stPage * ST_PER);
+  const info = '<span class="pg-info">Menampilkan <b>' + from + '–' + to + '</b> dari <b>' + total + '</b> unit</span>';
+  if (pages <= 1) { el.innerHTML = info; return; }
+  const btn = (p, label, off, cur) => '<button type="button" class="pg' + (cur ? ' cur' : '') + '" data-pg="' + p + '"' + (off ? ' disabled' : '') + (cur ? ' aria-current="page"' : '') + '>' + label + '</button>';
+  // 1 … 4 5 6 … 12 — long lists keep a window around the current page
+  const nums = []; for (let p = 1; p <= pages; p++) if (p === 1 || p === pages || Math.abs(p - stPage) <= 1) nums.push(p);
+  let numHtml = '', last = 0;
+  nums.forEach((p) => { if (p - last > 1) numHtml += '<span class="pg-gap">…</span>'; numHtml += btn(p, p, false, p === stPage); last = p; });
+  el.innerHTML = info + '<div class="pg-btns">' + btn(stPage - 1, '‹ Sebelumnya', stPage === 1) + numHtml + btn(stPage + 1, 'Berikutnya ›', stPage === pages) + '</div>';
+}
+$('#stPager').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pg]'); if (!b || b.disabled) return;
+  stPage = Number(b.dataset.pg); renderUnits();
+  $('#stF').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+$('#stF').onchange = $('#stT').onchange = () => { stPage = 1; renderUnits(); };
 $('#stTbl').addEventListener('change', async (e) => {
   if (!e.target.classList.contains('stSel')) return;
   try { await post('/api/units/' + e.target.dataset.id, { status: e.target.value }); } catch (err) { alert(err.message); }
@@ -1057,7 +1389,7 @@ function renderMap() {
     const u = lotUnit(l.n);
     const sold = u && u.status === 'terjual', held = u && u.status === 'dipesan';
     const fill = !u ? '#ffffff' : sold ? SOLD : TYPE_COLOR[u.type] || '#dfe6dc';
-    const tip = u ? u.no_unit + ' · ' + u.type + ' · ' + u.status[0].toUpperCase() + u.status.slice(1) + (u.pemesan ? ' · ' + u.pemesan : '') : 'Kavling ' + l.n + ' · belum ada di stok';
+    const tip = u ? u.no_unit + ' · ' + u.type + ' · ' + u.status[0].toUpperCase() + u.status.slice(1) + (u.status !== 'tersedia' && u.pemesan_terakhir ? ' · ' + u.pemesan_terakhir + (u.nilai ? ' · Rp ' + rp(u.nilai) : '') : '') : 'Kavling ' + l.n + ' · belum ada di stok';
     return '<g class="lot' + (sold ? ' sold' : '') + (mpSel === l.n ? ' sel' : '') + '" data-lot="' + l.n + '"><title>' + esc(tip) + '</title>' +
       '<rect class="fill" x="' + l.x + '" y="' + l.y + '" width="' + l.w + '" height="' + l.h + '" fill="' + fill + '"' + (u ? '' : ' fill-opacity=".85"') + '/>' +
       (held ? '<rect x="' + l.x + '" y="' + l.y + '" width="' + l.w + '" height="' + l.h + '" fill="url(#mpHeld)"/>' : '') +
@@ -1089,9 +1421,9 @@ function renderLotInfo() {
   box.innerHTML = '<h4>' + esc(u.no_unit) + '</h4><dl>' +
     '<dt>Type</dt><dd>' + esc(u.type || '—') + '</dd>' +
     '<dt>Status</dt><dd>' + status + '</dd>' +
-    '<dt>Harga</dt><dd>' + (u.harga ? 'Rp ' + rp(u.harga) : '—') + '</dd>' +
-    (u.pemesan ? '<dt>Pemesan</dt><dd>' + esc(u.pemesan) + '</dd>' : '') +
-    (u.doc_no ? '<dt>Dokumen</dt><dd>' + esc(u.doc_no) + '</dd>' : '') + '</dl>' +
+    (u.status === 'tersedia' ? '<dt>Harga</dt><dd>' + (u.harga ? 'Rp ' + rp(u.harga) : '—') + '</dd>' : '<dt>Nilai</dt><dd><b>' + (u.nilai ? 'Rp ' + rp(u.nilai) : '—') + '</b></dd>') +
+    (u.status !== 'tersedia' ? '<dt>' + (u.status === 'terjual' ? 'Pembeli' : 'Pemesan') + '</dt><dd>' + (u.pemesan_terakhir ? esc(u.pemesan_terakhir) : '—') + '</dd>' : '') +
+    ((u.booking_no || u.doc_no) && u.status !== 'tersedia' ? '<dt>Dokumen</dt><dd>' + esc(u.booking_no || u.doc_no) + '</dd>' : '') + '</dl>' +
     (ME.role === 'admin' ? '<select id="mpStatus" data-id="' + u.id + '">' + ['tersedia', 'dipesan', 'terjual'].map((x) => '<option value="' + x + '"' + (x === u.status ? ' selected' : '') + '>Ubah status: ' + x[0].toUpperCase() + x.slice(1) + '</option>').join('') + '</select>' : '');
 }
 
@@ -1104,6 +1436,42 @@ $('#mpInfo').addEventListener('change', async (e) => {
   try { await post('/api/units/' + e.target.dataset.id, { status: e.target.value }); } catch (err) { alert(err.message); }
   loadUnits();
 });
+
+/* ───────── sales report (below the stock list) ───────── */
+const tglShortID = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? +m[3] + ' ' + ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][+m[2] - 1] + ' ' + m[1] : ''; };
+const rpMonth = (k) => { const m = /^(\d{4})-(\d{2})$/.exec(k); return m ? ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][+m[2] - 1] + ' ' + m[1] : k; };
+const rpRupiah = (n) => 'Rp ' + (rp(n) || '0');
+const STATUS_LABEL = { tersedia: 'Tersedia', dipesan: 'Dipesan', terjual: 'Terjual' };
+async function loadReport() {
+  const q = new URLSearchParams(); if ($('#rpFrom').value) q.set('from', $('#rpFrom').value); if ($('#rpTo').value) q.set('to', $('#rpTo').value);
+  const r = await api('/api/report?' + q);
+  $('#rpCsv').href = '/api/report/csv' + (q.toString() ? '?' + q : '');
+  const sl = r.sales, st = r.stock;
+  const card = (label, big, sub, money) => '<div class="card"><span>' + label + '</span><b' + (money ? ' class="money"' : '') + '>' + big + '</b><small>' + sub + '</small></div>';
+  $('#rpCards').innerHTML =
+    card('Total penjualan', rpRupiah(sl.nilai), sl.jumlah + ' unit (dipesan + terjual)', true) +
+    card('Terjual', sl.terjual.jumlah + ' unit', rpRupiah(sl.terjual.nilai)) +
+    card('Dipesan', sl.dipesan.jumlah + ' unit', rpRupiah(sl.dipesan.nilai)) +
+    card('Uang masuk (kwitansi)', rpRupiah(r.receipts.total), r.receipts.jumlah + ' kwitansi', true) +
+    card('Stok tersedia', st.tersedia + ' / ' + st.total, 'unit belum terjual / dipesan') +
+    card('Rata-rata harga', sl.jumlah ? rpRupiah(Math.round(sl.nilai / sl.jumlah)) : '—', 'per unit terjual / dipesan', true);
+  const grid = (title, head, body, foot, wide) => '<div class="tblwrap' + (wide ? ' wide' : '') + '"><h5>' + title + '</h5><table class="tbl"><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody>' + (foot ? '<tfoot><tr>' + foot + '</tr></tfoot>' : '') + '</table></div>';
+  const types = Object.keys({ ...st.byType, ...Object.fromEntries(sl.byType.map((t) => [t.key, 1])) }).sort();
+  const valOf = (list, k) => (list.find((x) => x.key === k) || { jumlah: 0, nilai: 0 });
+  const typeRows = types.map((t) => { const s = st.byType[t] || { total: 0, tersedia: 0, dipesan: 0, terjual: 0 }; return '<tr><td><b>' + esc(t) + '</b></td><td class="r">' + s.total + '</td><td class="r">' + s.tersedia + '</td><td class="r">' + s.dipesan + '</td><td class="r">' + s.terjual + '</td><td class="r mono">' + rp(valOf(sl.byType, t).nilai) + '</td></tr>'; }).join('');
+  const simple = (list, label) => list.length ? list.map((x) => '<tr><td>' + esc(label ? label(x.key) : x.key) + '</td><td class="r">' + x.jumlah + '</td><td class="r mono">' + rp(x.nilai) + '</td></tr>').join('') : '<tr><td colspan="3" class="hint">Belum ada data</td></tr>';
+  const tot = '<td>Total</td><td class="r">' + sl.jumlah + '</td><td class="r mono">' + rp(sl.nilai) + '</td>';
+  const h3 = '<th></th><th class="r">Unit</th><th class="r">Nilai (Rp)</th>';
+  $('#rpGrid').innerHTML =
+    grid('Per type (stok & penjualan)', '<th>Type</th><th class="r">Total</th><th class="r">Tersedia</th><th class="r">Dipesan</th><th class="r">Terjual</th><th class="r">Nilai (Rp)</th>', typeRows, '', true) +
+    grid('Per cara bayar', h3, simple(sl.byCara), tot) +
+    grid('Per bulan', h3, simple(sl.byMonth, rpMonth), tot) +
+    grid('Per sales', h3, simple(sl.bySales), tot);
+  $('#rpTbl tbody').innerHTML = r.rows.map((x) => '<tr><td class="mono">' + esc(tglID(x.tanggal)) + '</td><td class="mono">' + esc(x.no) + '</td><td>' + esc(x.nama) + '</td><td><b>' + esc(x.unit) + '</b></td><td>' + esc(x.type) + '</td><td class="r mono">' + rp(x.harga) + '</td><td>' + esc(x.cara) + '</td><td>' + esc(x.sales) + '</td><td><span class="pill st-' + x.status + '">' + (STATUS_LABEL[x.status] || x.status) + '</span></td></tr>').join('');
+  $('#rpEmpty').style.display = r.rows.length ? 'none' : '';
+}
+['rpFrom', 'rpTo'].forEach((id) => ($('#' + id).onchange = () => loadReport().catch(() => {})));
+$('#rpAll').onclick = () => { $('#rpFrom').value = ''; $('#rpTo').value = ''; loadReport().catch(() => {}); };
 
 /* ───────── login state, users, password ───────── */
 let ME = { role: 'staff', name: '' };
@@ -1181,10 +1549,11 @@ const pdfTab = () => {
 
 forms.forEach((f) => (f.onsubmit = async (e) => {
   e.preventDefault();
-  const btns = [$('.go', f), $('#pvGo')], msgs = [$('.msg', f), $('#pvMsg')].filter(Boolean);
-  const note = (t, html) => msgs.forEach((m) => (html ? (m.innerHTML = t) : (m.textContent = t)));
+  if (f.id !== 'sp') { const miss = updateState(f) || []; if (miss.length) return flagMissing(f, miss); }
+  const btns = [$('.go', f), $('#pvGo')];
+  const note = (t, html) => [$('.msg', f), $('#pvMsg')].filter(Boolean).forEach((m) => { m.className = 'msg'; if (html) m.innerHTML = t; else m.textContent = t; });
   const done = () => btns.forEach((b) => b && (b.disabled = false));
-  btns.forEach((b) => b && (b.disabled = true)); note('Membuat PDF…');
+  btns.forEach((b) => b && (b.disabled = true)); noteKind = 'busy'; note('Membuat PDF…');
   const tab = pdfTab();
   const show = (url, label) => {
     const link = ' <a href="' + url + '" target="_blank" rel="noopener">Buka PDF</a>';
@@ -1194,17 +1563,25 @@ forms.forEach((f) => (f.onsubmit = async (e) => {
   try {
     if (f.id === 'sp') show('/api/syarat-pesanan.pdf', 'PDF siap.'); // fixed terms document: no number, nothing stored
     else {
-      const doc = await post(f.dataset.api, toJSON(f));
+      const editing = EDIT && EDIT.form === f.id ? EDIT : null;
+      const body = toJSON(f);
+      const doc = editing
+        ? await api('/api/documents/' + editing.id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        : await post(f.dataset.api, body);
+      if (editing) leaveEdit(false);
       f.querySelector('.reset')?.click(); // reset the form after a successful document
       if (!doc.pdfReady) throw new Error('Dokumen No. ' + doc.no + ' tersimpan, tetapi PDF gagal dibuat. Coba buka lagi dari Riwayat Dokumen.');
-      show(doc.pdf, 'No. ' + esc(doc.no) + ' · PDF siap.');
+      show(doc.pdf, 'No. ' + esc(doc.no) + (editing ? ' diperbarui · ' : ' · ') + 'PDF siap.');
     }
+    noteKind = 'done';
   } catch (err) {
     if (tab && !tab.closed) tab.close();
-    note('Gagal: ' + err.message);
+    note('Gagal: ' + err.message); noteKind = 'error';
+    if (err.message.startsWith('Lengkapi')) { f.dataset.flag = '1'; updateState(f); } // show what the server found missing
   }
   refreshNo(); loadUnits().catch(() => {});
   done();
+  if (noteKind !== 'done') updateState(f);
 }));
 // Coming back from the PDF with the Back button: the browser may restore this page as it was.
 addEventListener('pageshow', (e) => {
@@ -1215,6 +1592,8 @@ addEventListener('pageshow', (e) => {
 });
 $('#pvGo').onclick = () => document.getElementById(curTab)?.requestSubmit();
 $('#pvReset').onclick = () => { document.querySelector('#' + curTab + ' .reset')?.click(); $('#pvMsg').textContent = ''; };
+initForms();
+setTimeout(() => { try { draw(); } catch (e) { console.error(e); } }, 80);
 </script>
 </body>
 </html>

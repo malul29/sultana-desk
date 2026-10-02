@@ -7,7 +7,7 @@ const scrypt = promisify(crypto.scrypt);
 const COOKIE = 'sid';
 
 class HttpError extends Error {
-  constructor(status, message) { super(message); this.status = status; }
+  constructor(status, message, details) { super(message); this.status = status; this.details = details; }
 }
 
 // ── passwords: scrypt, format  scrypt$<saltHex>$<hashHex> ──

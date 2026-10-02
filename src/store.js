@@ -19,52 +19,161 @@ async function audit(c, userId, action, entity, entityId, detail) {
 }
 
 // ───────── documents ─────────
-// One transaction: lock unit → take number → render → save → reserve unit.
-// If rendering fails nothing is saved and no number is used.
-async function createDocument(jenis, data, user, render) {
-  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new HttpError(400, 'Data dokumen tidak valid.');
-  return db.tx(async (c) => {
-    let unit = null;
-    if (HOLDS_UNIT.has(jenis) && str(data.noUnit)) {
-      unit = (await c.query('SELECT * FROM units WHERE lower(no_unit) = lower($1) FOR UPDATE', [str(data.noUnit)])).rows[0] || null;
-      if (unit && unit.status === 'terjual') {
-        throw new HttpError(409, `Unit ${unit.no_unit} sudah berstatus "terjual"${unit.pemesan ? ' atas nama ' + unit.pemesan : ''}${unit.doc_no ? ' (' + unit.doc_no + ')' : ''}. Ubah statusnya di menu Stok Unit bila ingin memakainya lagi.`);
-      }
+const validation = require('../lib/validation');
+const isObj = (d) => d && typeof d === 'object' && !Array.isArray(d);
+
+function assertComplete(jenis, d) {
+  const miss = validation.missing(jenis, d);
+  if (miss.length) throw new HttpError(422, 'Lengkapi dulu: ' + miss.join(', ') + '.', { missing: miss });
+}
+
+// A unit document may only claim a free unit; receipts (Kwitansi) can always be issued for a unit,
+// because further payments on an already sold unit are normal.
+const unitBusyMessage = (u) => `Unit ${u.no_unit} sudah berstatus "${u.status}"${u.pemesan ? ' atas nama ' + u.pemesan : ''}${u.doc_no ? ' (' + u.doc_no + ')' : ''}. Ubah statusnya di menu Stok Unit bila ingin memakainya lagi.`;
+const lockUnit = async (c, no) => (str(no) ? (await c.query('SELECT * FROM units WHERE lower(no_unit) = lower($1) FOR UPDATE', [str(no)])).rows[0] || null : null);
+// SKU/SPU reserve a unit ("dipesan"); a Kwitansi marks it "terjual".
+const statusFor = (jenis) => (jenis === 'kwitansi' ? 'terjual' : 'dipesan');
+
+// Checks the uploads named in doc.files belong to this document (or are fresh ones from this user).
+async function claimFiles(c, jenis, doc, user, attached = {}) {
+  const files = {};
+  for (const kind of validation.filesFor(jenis, doc)) {
+    const id = str(doc.files && doc.files[kind]);
+    if (!id) continue;
+    const r = (await c.query('SELECT user_id, document_id FROM uploads WHERE id::text = $1 AND kind = $2 FOR UPDATE', [id, kind])).rows[0];
+    const mine = attached[kind] === id;
+    if (!r || (!mine && (r.document_id != null || (r.user_id !== user.id && user.role !== 'admin')))) {
+      throw new HttpError(422, `Berkas ${validation.FILE_KINDS[kind]} tidak valid atau sudah dipakai. Unggah ulang.`, { missing: [`Unggah ${validation.FILE_KINDS[kind]}`] });
     }
+    files[kind] = id;
+  }
+  return files;
+}
+const attachFiles = async (c, docId, files) => {
+  const ids = Object.values(files);
+  await c.query('DELETE FROM uploads WHERE document_id = $1 AND NOT (id::text = ANY($2))', [docId, ids]); // replaced / dropped
+  if (ids.length) await c.query('UPDATE uploads SET document_id = $1 WHERE id::text = ANY($2)', [docId, ids]);
+};
+
+// One transaction: validate → lock unit → take number → render → save → reserve unit.
+// If anything fails nothing is saved and no number is used.
+async function createDocument(jenis, data, user, render) {
+  if (!isObj(data)) throw new HttpError(400, 'Data dokumen tidak valid.');
+  assertComplete(jenis, data);
+  return db.tx(async (c) => {
+    const unit = HOLDS_UNIT.has(jenis) ? await lockUnit(c, data.noUnit) : null;
+    if (unit && jenis !== 'kwitansi' && unit.status === 'terjual') throw new HttpError(409, unitBusyMessage(unit));
     const no = await numbering.take(c, data.tanggal);
     const doc = { ...data, no };
     if (unit) doc.noUnit = unit.no_unit; // canonical spelling from stock
+    doc.files = await claimFiles(c, jenis, doc, user);
     const buffer = await render(doc);
     const ins = await c.query(
       'INSERT INTO documents (no, jenis, nama, no_unit, jumlah, tanggal, data, created_by) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id',
       [no, jenis, str(doc[WHO[jenis]]), str(doc.noUnit), int(doc.jumlah ?? doc.harga), isoDate(doc.tanggal), JSON.stringify(doc), user.id]);
+    const id = ins.rows[0].id;
+    await attachFiles(c, id, doc.files);
     if (unit) {
-      const isSold = jenis === 'kwitansi';
-      const newStatus = isSold ? 'terjual' : 'dipesan';
-      const pemesanName = str(doc[WHO[jenis]]) || unit.pemesan;
-      await c.query("UPDATE units SET status=$1, pemesan=$2, doc_no=$3, updated_by=$4, updated_at=now() WHERE id=$5", [newStatus, pemesanName, no, user.id, unit.id]);
-      await audit(c, user.id, isSold ? 'unit.sold' : 'unit.reserve', 'unit', unit.id, { no_unit: unit.no_unit, doc_no: no });
+      const next = jenis === 'kwitansi' && unit.status === 'terjual' ? unit.status : statusFor(jenis); // never step a sold unit back
+      const keepOwner = jenis === 'kwitansi' && unit.status === 'terjual';
+      await c.query('UPDATE units SET status=$1, pemesan=$2, doc_no=$3, updated_by=$4, updated_at=now() WHERE id=$5',
+        [next, keepOwner ? unit.pemesan : (str(doc[WHO[jenis]]) || unit.pemesan), keepOwner ? unit.doc_no : no, user.id, unit.id]);
+      await audit(c, user.id, next === 'terjual' ? 'unit.sold' : 'unit.reserve', 'unit', unit.id, { no_unit: unit.no_unit, doc_no: no });
     }
-    await audit(c, user.id, 'document.create', 'document', ins.rows[0].id, { no, jenis });
-    return { buffer, doc, id: ins.rows[0].id };
+    await audit(c, user.id, 'document.create', 'document', id, { no, jenis });
+    return { buffer, doc, id };
+  });
+}
+
+// Correct a printed document (admin only — enforced by the route). Number and PDF archive slot stay;
+// the PDF is rebuilt by the caller afterwards.
+async function updateDocument(id, data, user, render) {
+  if (!isObj(data)) throw new HttpError(400, 'Data dokumen tidak valid.');
+  return db.tx(async (c) => {
+    const old = (await c.query('SELECT * FROM documents WHERE id = $1 FOR UPDATE', [id])).rows[0];
+    if (!old) throw new HttpError(404, 'Dokumen tidak ditemukan.');
+    const jenis = old.jenis;
+    const attached = Object.fromEntries((await c.query('SELECT kind, id::text AS id FROM uploads WHERE document_id = $1', [id])).rows.map((r) => [r.kind, r.id]));
+    const merged = { ...data, no: old.no, files: { ...attached, ...(isObj(data.files) ? data.files : {}) } };
+    assertComplete(jenis, merged);
+
+    const oldUnit = HOLDS_UNIT.has(jenis) ? await lockUnit(c, old.no_unit) : null;
+    const newUnit = HOLDS_UNIT.has(jenis) ? await lockUnit(c, merged.noUnit) : null;
+    const moved = newUnit && (!oldUnit || newUnit.id !== oldUnit.id);
+    if (moved && jenis !== 'kwitansi' && newUnit.status === 'terjual') throw new HttpError(409, unitBusyMessage(newUnit)); // same rule as issuing a new document
+    if (newUnit) merged.noUnit = newUnit.no_unit;
+    merged.files = await claimFiles(c, jenis, merged, user, attached);
+    await render(merged); // fail before anything is written
+
+    await c.query(
+      'UPDATE documents SET nama=$1, no_unit=$2, jumlah=$3, tanggal=$4, data=$5, pdf=NULL, edited_at=now(), edited_by=$6 WHERE id=$7',
+      [str(merged[WHO[jenis]]), str(merged.noUnit), int(merged.jumlah ?? merged.harga), isoDate(merged.tanggal), JSON.stringify(merged), user.id, id]);
+    await attachFiles(c, id, merged.files);
+
+    // Unit stock follows the correction: free the old unit if this document was holding it, then hold the new one.
+    if (oldUnit && moved || (oldUnit && !newUnit)) {
+      if (oldUnit.doc_no === old.no) await c.query("UPDATE units SET status='tersedia', pemesan='', doc_no='', updated_by=$1, updated_at=now() WHERE id=$2", [user.id, oldUnit.id]);
+    }
+    if (newUnit && moved) {
+      await c.query('UPDATE units SET status=$1, pemesan=$2, doc_no=$3, updated_by=$4, updated_at=now() WHERE id=$5',
+        [statusFor(jenis), str(merged[WHO[jenis]]) || newUnit.pemesan, old.no, user.id, newUnit.id]);
+    } else if (newUnit && newUnit.doc_no === old.no) {
+      await c.query('UPDATE units SET pemesan=$1, updated_by=$2, updated_at=now() WHERE id=$3', [str(merged[WHO[jenis]]) || newUnit.pemesan, user.id, newUnit.id]);
+    }
+    const changed = Object.keys({ ...old.data, ...merged }).filter((k) => JSON.stringify(old.data[k]) !== JSON.stringify(merged[k]));
+    await audit(c, user.id, 'document.edit', 'document', id, { no: old.no, jenis, changed });
+    return { doc: merged, id, jenis };
   });
 }
 
 async function listDocuments({ q = '', jenis = '' } = {}) {
   const like = `%${str(q)}%`;
   const r = await db.query(
-    `SELECT d.id, d.no, d.jenis, d.nama, d.no_unit, d.jumlah, d.tanggal, ${TS('d.created_at')} AS created_at, u.name AS created_by
+    `SELECT d.id, d.no, d.jenis, d.nama, d.no_unit, d.jumlah, d.tanggal, ${TS('d.created_at')} AS created_at, u.name AS created_by,
+            d.edited_at IS NOT NULL AS edited,
+            (SELECT json_agg(json_build_object('kind', f.kind, 'id', f.id::text, 'filename', f.filename) ORDER BY f.kind) FROM uploads f WHERE f.document_id = d.id) AS files
      FROM documents d LEFT JOIN users u ON u.id = d.created_by
      WHERE ($1 = '' OR d.jenis = $1) AND (d.no ILIKE $2 OR d.nama ILIKE $2 OR d.no_unit ILIKE $2)
      ORDER BY d.id DESC LIMIT 500`, [str(jenis), like]);
   return r.rows;
 }
 const getDocument = async (id) => (await db.query('SELECT id, no, jenis, nama, no_unit, jumlah, tanggal, data, created_by, created_at, pdf IS NOT NULL AS has_pdf FROM documents WHERE id = $1', [id])).rows[0] || null;
+const getDocumentFiles = async (id) => (await db.query('SELECT kind, id::text AS id, filename, mime, size FROM uploads WHERE document_id = $1 ORDER BY kind', [id])).rows;
 const getPdf = async (id) => (await db.query('SELECT pdf FROM documents WHERE id = $1', [id])).rows[0]?.pdf || null;
 const savePdf = (id, buf) => db.query('UPDATE documents SET pdf = $1 WHERE id = $2', [buf, id]);
 
+// ───────── uploads (customer documents) ─────────
+async function saveUpload({ user, kind, filename, mime, data }) {
+  const r = await db.query('INSERT INTO uploads (user_id, kind, filename, mime, size, data) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id::text AS id',
+    [user.id, kind, filename, mime, data.length, data]);
+  return { id: r.rows[0].id, kind, filename, mime, size: data.length };
+}
+const getUpload = async (id) => (/^[0-9a-f-]{36}$/i.test(str(id)) ? (await db.query('SELECT id::text AS id, kind, filename, mime, size, data, user_id, document_id FROM uploads WHERE id = $1', [id])).rows[0] : null) || null;
+async function deleteUpload(id, user) {
+  const u = await getUpload(id);
+  if (!u) return false;
+  if (u.document_id != null) throw new HttpError(409, 'Berkas ini sudah menjadi bagian dari dokumen yang tercetak.');
+  if (u.user_id !== user.id && user.role !== 'admin') throw new HttpError(403, 'Berkas ini bukan milik Anda.');
+  await db.query('DELETE FROM uploads WHERE id = $1', [id]);
+  return true;
+}
+// Files that were uploaded but never attached to a printed document.
+const purgeOrphanUploads = () => db.query("DELETE FROM uploads WHERE document_id IS NULL AND created_at < now() - interval '1 day'");
+
 // ───────── units ─────────
-const listUnits = async () => (await db.query('SELECT id, no_unit, type, harga, status, pemesan, doc_no FROM units ORDER BY type, no_unit')).rows;
+// For a unit that is reserved or sold: the value (Harga Pengikatan) and the buyer's name from its most recent
+// SKU / SPU, so the stock list and the map can show who has it and for how much.
+const listUnits = async () => (await db.query(
+  `SELECT u.id, u.no_unit, u.type, u.harga, u.status, u.pemesan, u.doc_no,
+          COALESCE(NULLIF(b.nama, ''), NULLIF(u.pemesan, '')) AS pemesan_terakhir,
+          CASE WHEN b.data->>'harga' ~ '^[0-9]+$' THEN (b.data->>'harga')::bigint END AS nilai,
+          b.no AS booking_no, b.tanggal AS booking_tanggal
+   FROM units u
+   LEFT JOIN LATERAL (
+     SELECT d.nama, d.no, d.tanggal, d.data FROM documents d
+     WHERE d.jenis IN ('surat-konfirmasi', 'surat-pemesanan') AND lower(d.no_unit) = lower(u.no_unit)
+     ORDER BY d.id DESC LIMIT 1) b ON u.status <> 'tersedia'
+   ORDER BY u.type, u.no_unit`)).rows;
 
 async function addUnits(rows, user) {
   return db.tx(async (c) => {
@@ -110,6 +219,56 @@ async function updateUnit(id, f, user) {
 async function deleteUnit(id, user) {
   const r = await db.query('DELETE FROM units WHERE id = $1 RETURNING no_unit', [id]);
   if (r.rowCount) await audit(db, user.id, 'unit.delete', 'unit', id, { no_unit: r.rows[0].no_unit });
+}
+
+// ───────── sales report ─────────
+const CARA_LABEL = { 'tunai-keras': 'Tunai Keras', 'tunai-bertahap': 'Tunai Bertahap', kpr: 'KPR' };
+
+// A "sale" = the latest SKU/SPU of a unit that is still reserved/sold (cancelled units drop out).
+// Period filters on the document date. Stock figures are always current.
+async function salesReport({ from, to } = {}) {
+  const f = isoDate(from), t = isoDate(to);
+  const sold = (await db.query(
+    `SELECT x.id, x.no, x.jenis, x.nama, x.no_unit, x.tanggal, x.data, x.type, x.status FROM (
+       SELECT DISTINCT ON (lower(d.no_unit)) d.id, d.no, d.jenis, d.nama, d.no_unit, d.tanggal, d.data, u.type, u.status
+       FROM documents d JOIN units u ON lower(u.no_unit) = lower(d.no_unit) AND u.status <> 'tersedia'
+       WHERE d.jenis IN ('surat-konfirmasi', 'surat-pemesanan') AND d.no_unit <> ''
+       ORDER BY lower(d.no_unit), d.id DESC) x
+     WHERE ($1::date IS NULL OR x.tanggal >= $1) AND ($2::date IS NULL OR x.tanggal <= $2)
+     ORDER BY x.tanggal DESC NULLS LAST, x.id DESC`, [f, t])).rows;
+  const rows = sold.map((r) => ({
+    id: r.id, tanggal: r.tanggal, no: r.no, jenis: r.jenis, nama: r.nama, unit: r.no_unit, type: r.type || '',
+    harga: Number(r.data && r.data.harga) || 0, cara: CARA_LABEL[r.data && r.data.cara && r.data.cara.tipe] || '—',
+    sales: str(r.data && r.data.sales) || '—', status: r.status,
+  }));
+  const group = (keyFn) => {
+    const m = new Map();
+    for (const r of rows) { const k = keyFn(r); const g = m.get(k) || { key: k, jumlah: 0, nilai: 0 }; g.jumlah += 1; g.nilai += r.harga; m.set(k, g); }
+    return [...m.values()];
+  };
+  const sum = (list) => ({ jumlah: list.length, nilai: list.reduce((a, r) => a + r.harga, 0) });
+
+  const units = (await db.query('SELECT type, status, count(*)::int n FROM units GROUP BY type, status')).rows;
+  const stock = { total: 0, tersedia: 0, dipesan: 0, terjual: 0, byType: {} };
+  for (const u of units) {
+    stock.total += u.n; stock[u.status] = (stock[u.status] || 0) + u.n;
+    const t2 = (stock.byType[u.type || '—'] ||= { total: 0, tersedia: 0, dipesan: 0, terjual: 0 });
+    t2.total += u.n; t2[u.status] += u.n;
+  }
+  const rec = (await db.query(
+    "SELECT count(*)::int n, COALESCE(sum(jumlah), 0)::bigint total FROM documents WHERE jenis = 'kwitansi' AND ($1::date IS NULL OR tanggal >= $1) AND ($2::date IS NULL OR tanggal <= $2)", [f, t])).rows[0];
+  return {
+    period: { from: f, to: t }, stock,
+    sales: {
+      ...sum(rows), terjual: sum(rows.filter((r) => r.status === 'terjual')), dipesan: sum(rows.filter((r) => r.status === 'dipesan')),
+      byType: group((r) => r.type || '—').sort((a, b) => a.key.localeCompare(b.key)),
+      byCara: group((r) => r.cara).sort((a, b) => b.nilai - a.nilai),
+      byMonth: group((r) => (r.tanggal || '').slice(0, 7) || '—').sort((a, b) => a.key.localeCompare(b.key)),
+      bySales: group((r) => r.sales).sort((a, b) => b.nilai - a.nilai || b.jumlah - a.jumlah),
+    },
+    receipts: { jumlah: rec.n, total: Number(rec.total) },
+    rows,
+  };
 }
 
 // ───────── users ─────────
@@ -184,6 +343,6 @@ const listAudit = async (limit = 200) => (await db.query(
   `SELECT a.id, ${TS('a.at')} AS at, u.name AS user, a.action, a.entity, a.entity_id, a.detail FROM audit_log a LEFT JOIN users u ON u.id = a.user_id ORDER BY a.id DESC LIMIT $1`, [limit])).rows;
 
 module.exports = {
-  audit, createDocument, listDocuments, getDocument, getPdf, savePdf, listUnits, addUnits, updateUnit, deleteUnit,
+  audit, salesReport, saveUpload, getUpload, deleteUpload, purgeOrphanUploads, createDocument, updateDocument, listDocuments, getDocument, getDocumentFiles, getPdf, savePdf, listUnits, addUnits, updateUnit, deleteUnit,
   listUsers, createUser, updateUser, changeOwnPassword, authenticate, ensureAdmin, listAudit, str,
 };
