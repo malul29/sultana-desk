@@ -1,0 +1,32 @@
+{
+  "name": "sultana-desk",
+  "version": "1.0.0",
+  "description": "Sultana Desk: dokumen, stok unit, dan riwayat untuk Sultana Living",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node scripts/dev.js",
+    "create-user": "node scripts/create-user.js",
+    "migrate-sqlite": "node scripts/migrate-sqlite.js",
+    "test": "node --test test/*.test.js",
+    "seed-units": "node scripts/seed-units.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "docx": "^9.8.1",
+    "express": "^5.2.1",
+    "jsdom": "^30.1.1",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.23.0",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "embedded-postgres": "^18.4.0-beta.17"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}

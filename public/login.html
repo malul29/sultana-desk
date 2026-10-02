@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/favicon.png">
+<title>Masuk – Sultana Desk</title>
+<style>
+  :root { --bg:#f5f7fa; --card:#fff; --ink:#22262e; --mute:#6b7280; --line:#d9dee7; --brand:#4a6b40; --brand-d:#3f5636; --soft:#eef3ed; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:grid; place-items:center; background:var(--bg); color:var(--ink); font:14px/1.45 Inter,system-ui,-apple-system,sans-serif; padding:16px; }
+  .box { width:100%; max-width:380px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px 26px 26px; box-shadow:0 1px 3px rgba(20,30,50,.06); }
+  .box img { width:150px; display:block; margin:0 auto 20px; }
+  h1 { font-size:18px; margin:0 0 4px; text-align:center; } p.sub { margin:0 0 20px; color:var(--mute); text-align:center; font-size:13px; }
+  label { display:block; font-size:13px; font-weight:500; color:#5c635f; margin-bottom:14px; }
+  input { width:100%; margin-top:5px; padding:10px 12px; border:1px solid var(--line); border-radius:9px; background:#fcfdfc; color:var(--ink); font:inherit; font-size:14px; }
+  input:focus { outline:0; border-color:var(--brand); box-shadow:0 0 0 3px rgba(74,107,64,.14); background:#fff; }
+  button { width:100%; margin-top:4px; padding:11px; border:0; border-radius:9px; background:var(--brand); color:#fff; font:inherit; font-weight:600; cursor:pointer; }
+  button:hover { background:var(--brand-d); } button:disabled { opacity:.6; cursor:default; }
+  .err { min-height:20px; margin:0 0 10px; color:#a4372d; font-size:13px; }
+</style>
+</head>
+<body>
+<form class="box" id="f" autocomplete="on">
+  <img src="/assets/logo-mark.png" alt="Sultana Living">
+  <h1>Masuk</h1>
+  <p class="sub">Sultana Desk</p>
+  <label>Username<input name="username" autocomplete="username" autofocus required></label>
+  <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+  <p class="err" id="err" role="alert"></p>
+  <button id="go">Masuk</button>
+</form>
+<script>
+document.getElementById('f').onsubmit = async (e) => {
+  e.preventDefault();
+  const go = document.getElementById('go'), err = document.getElementById('err');
+  go.disabled = true; err.textContent = '';
+  try {
+    const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'fetch' },
+      body: JSON.stringify({ username: e.target.username.value, password: e.target.password.value }) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || 'Gagal masuk.');
+    location.href = '/';
+  } catch (x) { err.textContent = x.message; go.disabled = false; }
+};
+</script>
+</body>
+</html>

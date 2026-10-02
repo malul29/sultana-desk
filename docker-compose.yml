@@ -1,0 +1,57 @@
+# Production stack: PostgreSQL + the app + Caddy (automatic HTTPS).
+# Usage: cp .env.example .env  →  edit .env  →  docker compose up -d --build
+name: sultana
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sultana
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Isi DB_PASSWORD di file .env}
+      POSTGRES_DB: sultana
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sultana -d sultana"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No "ports": the database is reachable only from the app container.
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://sultana:${DB_PASSWORD}@db:5432/sultana
+      PORT: "3000"
+    volumes:
+      - ./data:/app/data:ro     # only used by the one-time SQLite import
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?Isi DOMAIN di file .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

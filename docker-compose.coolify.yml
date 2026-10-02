@@ -1,0 +1,40 @@
+# Coolify deployment: PostgreSQL + the app. No Caddy — Coolify's own proxy (Traefik) handles
+# the domain and HTTPS. In Coolify set the domain on the "app" service, e.g. https://desk.example.com:3000
+# (the ":3000" tells Coolify which container port to route to).
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sultana
+      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_POSTGRES}   # generated and kept by Coolify
+      POSTGRES_DB: sultana
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sultana -d sultana"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      DATABASE_URL: postgres://sultana:${SERVICE_PASSWORD_POSTGRES}@db:5432/sultana
+      TRUST_PROXY: "1"          # one proxy hop (Traefik) in front of the app
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?Isi ADMIN_USERNAME di Environment Variables Coolify}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Isi ADMIN_PASSWORD di Environment Variables Coolify}
+      ADMIN_NAME: ${ADMIN_NAME:-Administrator}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      PDF_WORKERS: ${PDF_WORKERS:-1}   # 1 keeps memory low on a 2 GB server shared with Coolify
+    expose:
+      - "3000"
+
+volumes:
+  pgdata:
