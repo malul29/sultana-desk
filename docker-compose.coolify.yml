@@ -35,6 +35,8 @@ services:
       PDF_WORKERS: ${PDF_WORKERS:-1}   # 1 keeps memory low on a 2 GB server shared with Coolify
     expose:
       - "3000"
+    ports:
+      - "3000:3000"   # juga dibuka ke host: http://IP-VPS:3000 (HTTP polos, tanpa HTTPS)
 
 volumes:
   pgdata:
