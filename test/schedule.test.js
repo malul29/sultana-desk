@@ -47,13 +47,14 @@ test('S&K follow the original sheets: numbered clauses with lettered sub-clauses
   const pay = p.items[7].subs[0];
   assert.ok(pay.account && /^-dengan mencantumkan nama Perumahan/.test(pay.para), 'the paragraph after the account block is kept');
   assert.equal(p.items[8].dashPara.startsWith('-dalam hal terjadi keterlambatan serah terima'), true);
-  assert.equal(terms.SURAT_KONFIRMASI.items.length, 6);
-  assert.equal(terms.SURAT_KONFIRMASI.items[4].subs.length, 2);
-  assert.equal(terms.SURAT_PESANAN_UNIT.items.length, 5, 'no reservation clause in the SPU');
+  for (const [spec, name] of [[terms.SURAT_KONFIRMASI, 'Surat Konfirmasi Unit'], [terms.SURAT_PESANAN_UNIT, 'Surat Pemesanan Unit']]) {
+    assert.equal(spec.items.length, 11, 'same clauses as the Surat Pesanan template');
+    assert.ok(spec.title.includes(name.toUpperCase()) && !JSON.stringify(spec).includes('Surat Pesanan'), 'document name swapped in everywhere');
+  }
 });
 
-test('SKU / SPU terms print the Mandiri reservation account', () => {
-  assert.deepEqual(terms.ACCOUNT_KONFIRMASI, [['An', 'MEGAWATI DAN ROSDIANA'], ['Bank', 'MANDIRI'], ['Acc', '174-00-1310120-9']]);
+test('SKU prints the Mandiri account, SPU the company BTN account', () => {
+  assert.deepEqual(terms.ACCOUNT_KONFIRMASI, [['Atas nama', 'MEGAWATI DAN ROSDIANA'], ['Bank', 'MANDIRI'], ['Acc', '174-00-1310120-9']]);
   assert.deepEqual(terms.ACCOUNT_PESANAN.at(-1), ['Acc', '01057-01-30-000035-8'], 'the Surat Pesanan sheet keeps the BTN company account');
 });
 
