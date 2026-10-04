@@ -3,7 +3,7 @@ const auth = require('../auth');
 const store = require('../store');
 
 const r = Router();
-r.use(auth.requireAuth);
+r.use(auth.requireRole('admin')); // sales and money figures are for admins only
 
 const isoOrNull = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : '');
 

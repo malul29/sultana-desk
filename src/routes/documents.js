@@ -74,7 +74,7 @@ for (const [jenis, [render, name]] of Object.entries(TYPES)) {
   });
 }
 
-r.get('/documents', async (req, res) => res.json(await store.listDocuments({ q: String(req.query.q || ''), jenis: String(req.query.jenis || '') })));
+r.get('/documents', async (req, res) => res.json(await store.listDocuments({ q: String(req.query.q || ''), jenis: String(req.query.jenis || ''), page: req.query.page, per: req.query.per })));
 
 // One document with its data and uploaded files (used to open it for correction).
 r.get('/documents/:id', async (req, res) => {

@@ -107,6 +107,7 @@
   aside footer .me { display:flex; flex-direction:column; gap:1px; margin-bottom:6px; } aside footer .me b { color:var(--ink); font-size:13px; } aside footer .me span { text-transform:capitalize; }
   .me-actions { display:flex; gap:12px; } .me-actions .link { padding:0; font-size:12px; }
   body.role-staff .admin-only { display:none !important; }
+  body:not(.is-admin) #us, body:not(.is-admin) #lp { display:none !important; } /* admin-only page: never shown to staff, nor before the user is known */
   dialog form { display:block; } /* the global `form { display:none }` is only for the document forms */
   dialog { border:1px solid var(--line); border-radius:14px; padding:22px; width:min(380px, 92vw); } dialog::backdrop { background:rgba(15,20,17,.4); }
   dialog h3 { margin:0 0 14px; font-size:16px; } dialog label { grid-template-columns:1fr; gap:4px; margin-bottom:12px; }
@@ -136,6 +137,7 @@
   /* unit cards (stok unit) */
   .pager { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:24px 0 12px; font-size:14px; color:var(--mute); font-weight: 500; } 
   .pager b { color:var(--ink); font-weight: 700; }
+  .pg-size { display:inline-flex; align-items:center; gap:8px; font-size:13px; } .pg-size select { width:auto; padding:5px 26px 5px 10px; font-size:13px; }
   .pg-btns { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .pg { min-width:36px; height:36px; padding:0 12px; border:none; background:var(--bg); color:var(--ink); border-radius:10px; font:inherit; font-size:14px; font-weight: 600; cursor:pointer; transition: all 0.2s ease; }
   .pg:hover:not(:disabled):not(.cur) { background:var(--soft); color: var(--brand-d); transform: translateY(-1px); } 
@@ -201,6 +203,8 @@
   .upl.done { border-style:solid; border-color:#bcd2b8; background:var(--soft); } .upl.done .us { color:var(--brand-d); font-weight:500; }
   .req { color:#c95a50; font-style:normal; font-weight:700; margin-left:3px; }
   .lt { display:block; }
+  .sub .opt { font-weight:400; font-size:12px; color:var(--mute); margin-left:4px; text-transform:none; letter-spacing:0; }
+  .sect .opt { font-weight:400; font-size:12px; color:var(--mute); letter-spacing:0; text-transform:none; margin-left:4px; }
   .req-note { margin:0 0 14px; font-size:12px; color:var(--mute); }
   .is-missing { outline:2px solid #e3a8a1; outline-offset:3px; border-radius:8px; }
   label.is-missing input, label.is-missing select, label.is-missing textarea, .srow.is-missing input { border-color:#c95a50; }
@@ -422,7 +426,7 @@
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg>
         <b>Stok Unit</b>
       </button>
-      <button data-t="lp">
+      <button data-t="lp" class="admin-only">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-5"/><path d="M12 16V7"/><path d="M16 16v-8"/></svg>
         <b>Laporan Penjualan</b>
       </button>
@@ -484,12 +488,12 @@
     <fieldset class="cond" data-when="cara.tipe=tunai-keras|tunai-bertahap|kpr"><h3 class="sect">Jadwal Pembayaran</h3>
       <div class="sched" data-reservasi="1"></div>
     </fieldset>
-    <fieldset><h3 class="sect">Dokumen Pemesan</h3>
+    <fieldset><h3 class="sect">Dokumen Pemesan <span class="opt">(opsional)</span></h3>
       <div class="upl-list">
         <div class="upl" data-kind="ktp"></div>
         <div class="upl" data-kind="npwp"></div>
       </div>
-      <p class="hint" style="margin:10px 0 0">Berkas PDF/JPG/PNG/WEBP, maks. 8 MB per berkas.</p>
+      <p class="hint" style="margin:10px 0 0">Berkas PDF/JPG/PNG/WEBP, maks. 8 MB per berkas. Tidak wajib untuk mencetak.</p>
     </fieldset>
     <fieldset><h3 class="sect">Penandatangan</h3>
       <div class="grid"><label>Penerima Pesanan<input name="penerima"></label><label>Sales<input name="sales"></label></div>
@@ -532,7 +536,7 @@
     <fieldset class="cond" data-when="cara.tipe=tunai-keras|tunai-bertahap|kpr"><h3 class="sect">Jadwal Pembayaran</h3>
       <div class="sched" data-reservasi="0"></div>
     </fieldset>
-    <fieldset><h3 class="sect">Dokumen Pemesan</h3>
+    <fieldset><h3 class="sect">Dokumen Pemesan <span class="opt">(opsional)</span></h3>
       <div class="upl-list">
         <div class="upl" data-kind="ktp"></div>
         <div class="upl" data-kind="npwp"></div>
@@ -540,7 +544,7 @@
         <div class="upl cond" data-kind="rekening" data-when="cara.tipe=kpr"></div>
         <div class="upl cond" data-kind="nikah" data-when="cara.tipe=kpr"></div>
       </div>
-      <p class="hint" style="margin:10px 0 0">Berkas PDF/JPG/PNG/WEBP, maks. 8 MB per berkas. KK, Rekening Koran, dan Surat Nikah wajib bila memilih KPR.</p>
+      <p class="hint" style="margin:10px 0 0">Berkas PDF/JPG/PNG/WEBP, maks. 8 MB per berkas. Tidak wajib untuk mencetak. KK, Rekening Koran, dan Surat Nikah muncul bila memilih KPR.</p>
     </fieldset>
     <fieldset><h3 class="sect">Penandatangan</h3>
       <div class="grid"><label>Penerima Pesanan<input name="penerima"></label><label>Sales<input name="sales"></label></div>
@@ -620,6 +624,8 @@
       <select id="rwJ"><option value="">Semua jenis</option><option value="surat-konfirmasi">Surat Konfirmasi Unit</option><option value="surat-pemesanan">Surat Pemesanan Unit</option><option value="kwitansi">Kwitansi</option><option value="tanda-terima">Tanda Terima</option></select>
     </div>
     <div class="tblwrap"><table class="tbl" id="rwTbl"><thead><tr><th>Tanggal</th><th>No. Dokumen</th><th>Jenis</th><th>Nama</th><th>Unit</th><th class="r">Jumlah (Rp)</th><th>Berkas</th><th>Dibuat oleh</th><th></th></tr></thead><tbody></tbody></table></div>
+    <div class="pager" id="rwPager"></div>
+    <p class="hint" id="rwNone" style="display:none">Tidak ada dokumen yang cocok dengan pencarian.</p>
     <p class="hint" id="rwEmpty" style="display:none">Belum ada dokumen. Dokumen tersimpan otomatis setiap kali Anda menekan Unduh.</p>
   </section>
 
@@ -651,7 +657,7 @@
     </form>
     <p class="msg" id="usMsg" style="margin:-6px 0 10px"></p>
     <div class="tblwrap"><table class="tbl" id="usTbl"><thead><tr><th>Username</th><th>Nama</th><th>Peran</th><th>Status</th><th>Login terakhir</th><th></th></tr></thead><tbody></tbody></table></div>
-    <h4 class="sub">Aktivitas terbaru</h4>
+    <h4 class="sub">Aktivitas terbaru <span class="opt">(maksimal 100 terakhir)</span></h4>
     <div class="tblwrap"><table class="tbl" id="auTbl"><thead><tr><th>Waktu</th><th>Pengguna</th><th>Aktivitas</th></tr></thead><tbody></tbody></table></div>
   </section>
 
@@ -746,6 +752,7 @@ $('#ttl').textContent = TITLES[curTab][0];
 if ($('#pvToggle')) $('#pvToggle').style.display = PV_FORMS[curTab] ? '' : 'none';
 
 const setTab = (t) => {
+  if (typeof ME !== 'undefined' && ME.role !== 'admin' && typeof ADMIN_TABS !== 'undefined' && ADMIN_TABS.has(t)) t = 'sk';
   curTab = t;
   document.body.dataset.tab = t;
   try { localStorage.setItem('sultana-tab', t); } catch {}
@@ -903,7 +910,7 @@ function buildUploads(f) {
     box.innerHTML = '<span class="ul">' + UPL[kind] + '</span><button type="button" class="ghost upl-pick">Pilih berkas</button><span class="us">Belum ada berkas</span>' +
       '<button type="button" class="link uv" hidden>Lihat</button><a class="ud" hidden>Unduh</a><button type="button" class="link del ux" hidden>Hapus</button>' +
       '<input type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp">' +
-      '<input type="hidden" name="files.' + kind + '" data-label="Unggah ' + UPL[kind] + '">';
+      '<input type="hidden" name="files.' + kind + '" data-label="Unggah ' + UPL[kind] + '" data-optional>';
   });
 }
 function setUpload(box, info, fresh = true) {
@@ -1316,15 +1323,26 @@ const post = (url, body) => api(url, { method: 'POST', headers: { 'Content-Type'
 let units = [];
 let stPage = 1; const ST_PER = 12; // units per page
 
+let rwPage = 1, rwPer = 25; // history table: page number and page size (the server does the paging)
 async function loadDocs() {
-  const p = new URLSearchParams({ q: $('#rwQ').value, jenis: $('#rwJ').value });
-  const rows = await api('/api/documents?' + p);
+  const p = new URLSearchParams({ q: $('#rwQ').value, jenis: $('#rwJ').value, page: rwPage, per: rwPer });
+  const res = await api('/api/documents?' + p), rows = res.rows;
+  rwPage = res.page; // the server clamps a page that no longer exists (e.g. after filtering)
   const files = (r) => (r.files || []).map((x) => '<span class="fchip"><button type="button" class="link" data-view="' + x.id + '" data-name="' + esc(x.filename) + '" data-kind="' + x.kind + '" title="Lihat ' + esc(x.filename) + '">' + esc(UPL[x.kind] || x.kind) + '</button><a class="fdl" href="/api/uploads/' + x.id + '?download=1" download="' + esc(x.filename) + '" title="Unduh ' + esc(x.filename) + '" aria-label="Unduh ' + esc(UPL[x.kind] || x.kind) + '">↓</a></span>').join('');
   $('#rwTbl tbody').innerHTML = rows.map((r) => '<tr><td class="mono">' + esc(tglShortID(r.tanggal) || r.created_at.slice(0, 10)) + '</td><td class="mono"><b>' + esc(r.no) + '</b>' + (r.edited ? ' <span class="pill" title="Pernah dikoreksi admin">diedit</span>' : '') + '</td><td>' + esc(JENIS_LABEL[r.jenis] || r.jenis) + '</td><td>' + esc(r.nama) + '</td><td>' + esc(r.no_unit) + '</td><td class="r mono">' + (rp(r.jumlah) || '') + '</td><td class="files">' + files(r) + '</td><td>' + esc(r.created_by || '') + '</td><td class="r nowrap"><a class="link" href="/api/documents/' + r.id + '/pdf" target="_blank" rel="noopener">Cetak PDF</a><a class="link" href="/api/documents/' + r.id + '/download">Word</a>' + (ME.role === 'admin' ? '<button type="button" class="link" data-edit-doc="' + r.id + '">Edit</button>' : '') + '</td></tr>').join('');
-  $('#rwEmpty').style.display = rows.length ? 'none' : '';
+  $('#rwEmpty').style.display = res.total || $('#rwQ').value || $('#rwJ').value ? 'none' : '';
+  $('#rwNone').style.display = !res.total && ($('#rwQ').value || $('#rwJ').value) ? '' : 'none';
+  const sizes = [10, 25, 50, 100].map((n) => '<option value="' + n + '"' + (n === res.per ? ' selected' : '') + '>' + n + '</option>').join('');
+  renderPager($('#rwPager'), { page: res.page, per: res.per, total: res.total, pages: res.pages, noun: 'dokumen', extra: '<label class="pg-size">Per halaman <select id="rwPer">' + sizes + '</select></label>' });
 }
+$('#rwPager').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pg]'); if (!b || b.disabled) return;
+  rwPage = Number(b.dataset.pg); loadDocs().catch((err) => alert(err.message));
+  $('#rwQ').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+});
+$('#rwPager').addEventListener('change', (e) => { if (e.target.id !== 'rwPer') return; rwPer = Number(e.target.value); rwPage = 1; loadDocs().catch((err) => alert(err.message)); });
 $('#rwTbl').addEventListener('click', (e) => { const id = e.target.dataset.editDoc; if (id) openEdit(id).catch((err) => alert(err.message)); });
-let rwT; $('#rwQ').oninput = () => { clearTimeout(rwT); rwT = setTimeout(loadDocs, 200); }; $('#rwJ').onchange = loadDocs;
+let rwT; $('#rwQ').oninput = () => { clearTimeout(rwT); rwT = setTimeout(() => { rwPage = 1; loadDocs(); }, 200); }; $('#rwJ').onchange = () => { rwPage = 1; loadDocs(); };
 
 async function loadUnits() {
   units = await api('/api/units');
@@ -1359,20 +1377,19 @@ function renderUnits() {
   }).join('');
   $('#stEmpty').style.display = units.length ? 'none' : '';
   $('#stNone').style.display = units.length && !rows.length ? '' : 'none';
-  renderPager(rows.length, pages);
+  renderPager($('#stPager'), { page: stPage, per: ST_PER, total: rows.length, pages, noun: 'unit' });
 }
-function renderPager(total, pages) {
-  const el = $('#stPager');
+// Shared pager: "Menampilkan 1–12 dari 36 unit" + ‹ Sebelumnya 1 … 4 5 6 … 12 Berikutnya ›
+function renderPager(el, { page, per, total, pages, noun, extra = '' }) {
   if (!total) { el.innerHTML = ''; return; }
-  const from = (stPage - 1) * ST_PER + 1, to = Math.min(total, stPage * ST_PER);
-  const info = '<span class="pg-info">Menampilkan <b>' + from + '–' + to + '</b> dari <b>' + total + '</b> unit</span>';
-  if (pages <= 1) { el.innerHTML = info; return; }
+  const from = (page - 1) * per + 1, to = Math.min(total, page * per);
+  const info = '<span class="pg-info">Menampilkan <b>' + from + '–' + to + '</b> dari <b>' + total + '</b> ' + noun + '</span>';
+  if (pages <= 1) { el.innerHTML = info + extra; return; }
   const btn = (p, label, off, cur) => '<button type="button" class="pg' + (cur ? ' cur' : '') + '" data-pg="' + p + '"' + (off ? ' disabled' : '') + (cur ? ' aria-current="page"' : '') + '>' + label + '</button>';
-  // 1 … 4 5 6 … 12 — long lists keep a window around the current page
-  const nums = []; for (let p = 1; p <= pages; p++) if (p === 1 || p === pages || Math.abs(p - stPage) <= 1) nums.push(p);
+  const nums = []; for (let p = 1; p <= pages; p++) if (p === 1 || p === pages || Math.abs(p - page) <= 1) nums.push(p);
   let numHtml = '', last = 0;
-  nums.forEach((p) => { if (p - last > 1) numHtml += '<span class="pg-gap">…</span>'; numHtml += btn(p, p, false, p === stPage); last = p; });
-  el.innerHTML = info + '<div class="pg-btns">' + btn(stPage - 1, '‹ Sebelumnya', stPage === 1) + numHtml + btn(stPage + 1, 'Berikutnya ›', stPage === pages) + '</div>';
+  nums.forEach((p) => { if (p - last > 1) numHtml += '<span class="pg-gap">…</span>'; numHtml += btn(p, p, false, p === page); last = p; });
+  el.innerHTML = info + '<div class="pg-btns">' + btn(page - 1, '‹ Sebelumnya', page === 1) + numHtml + btn(page + 1, 'Berikutnya ›', page === pages) + '</div>' + extra;
 }
 $('#stPager').addEventListener('click', (e) => {
   const b = e.target.closest('[data-pg]'); if (!b || b.disabled) return;
@@ -1586,11 +1603,15 @@ const auDetail = (a) => { const d = a.detail || {}; return [d.no, d.no_unit, d.u
 async function loadMe() {
   const r = await fetch('/api/auth/me'); ME = (await r.json()).user;
   document.body.classList.toggle('role-staff', ME.role !== 'admin');
+  document.body.classList.toggle('is-admin', ME.role === 'admin');
   $('#meName').textContent = ME.name; $('#meRole').textContent = ROLE_LABEL[ME.role] || ME.role;
 }
 
 // Run the first tab only after all page helpers and the signed-in user are ready.
+const ADMIN_TABS = new Set(['us', 'lp']);
 loadMe().then(() => {
+  // The last open page is remembered in this browser, whoever signs in next: staff must not land on an admin page.
+  if (ME.role !== 'admin' && ADMIN_TABS.has(curTab)) setTab('sk');
   setPv(!!PV_FORMS[curTab] && pvWanted);
   if (curTab === 'rw') loadDocs(); if (curTab === 'us') loadUsers().catch(() => {});
   return loadUnits();
@@ -1615,7 +1636,7 @@ async function loadUsers() {
   $('#usTbl tbody').innerHTML = rows.map((u) => '<tr' + (u.active ? '' : ' style="opacity:.55"') + '><td class="mono"><b>' + esc(u.username) + '</b></td><td>' + esc(u.name) + '</td>' +
     '<td><select data-uid="' + u.id + '" class="usRole"><option value="staff"' + (u.role === 'staff' ? ' selected' : '') + '>Staf</option><option value="admin"' + (u.role === 'admin' ? ' selected' : '') + '>Admin</option></select></td>' +
     '<td><span class="pill ' + (u.active ? 'st-tersedia' : 'st-terjual') + '">' + (u.active ? 'Aktif' : 'Nonaktif') + '</span></td><td class="mono">' + esc(u.last_login || '—') + '</td>' +
-    '<td class="r"><button type="button" class="link" data-reset="' + u.id + '" data-un="' + esc(u.username) + '">Reset password</button><button type="button" class="link' + (u.active ? ' del' : '') + '" data-toggle="' + u.id + '" data-active="' + (u.active ? 1 : 0) + '">' + (u.active ? 'Nonaktifkan' : 'Aktifkan') + '</button></td></tr>').join('');
+    '<td class="r"><button type="button" class="link" data-reset="' + u.id + '" data-un="' + esc(u.username) + '" data-active="' + (u.active ? 1 : 0) + '">Reset password</button><button type="button" class="link' + (u.active ? ' del' : '') + '" data-toggle="' + u.id + '" data-active="' + (u.active ? 1 : 0) + '">' + (u.active ? 'Nonaktifkan' : 'Aktifkan') + '</button></td></tr>').join('');
   const au = await api('/api/users/audit/log');
   $('#auTbl tbody').innerHTML = au.map((a) => '<tr><td class="mono">' + esc(a.at) + '</td><td>' + esc(a.user || '—') + '</td><td>' + esc(ACTION_LABEL[a.action] || a.action) + (auDetail(a) ? ' <small class="hint">' + esc(auDetail(a)) + '</small>' : '') + '</td></tr>').join('');
 }
@@ -1635,7 +1656,10 @@ $('#usTbl').addEventListener('click', async (e) => {
   try {
     if (t.dataset.reset) {
       const pw = prompt('Password baru untuk "' + t.dataset.un + '" (min. 8 karakter):'); if (!pw) return;
-      await api('/api/users/' + t.dataset.reset, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) }); usMsg('Password "' + t.dataset.un + '" direset. Pengguna harus login ulang.');
+      // A deactivated account cannot log in whatever its password is, so offer to switch it back on.
+      const wake = t.dataset.active === '0' && confirm('Akun "' + t.dataset.un + '" sedang NONAKTIF, jadi tidak bisa login walau passwordnya baru.\n\nAktifkan akun ini sekarang?');
+      await api('/api/users/' + t.dataset.reset, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(wake ? { password: pw, active: true } : { password: pw }) });
+      usMsg('Password "' + t.dataset.un + '" direset.' + (t.dataset.active === '0' && !wake ? ' Akun masih NONAKTIF: klik "Aktifkan" agar bisa login.' : ' Pengguna harus login ulang.'));
     } else if (t.dataset.toggle) {
       await api('/api/users/' + t.dataset.toggle, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ active: t.dataset.active !== '1' }) });
     } else return;

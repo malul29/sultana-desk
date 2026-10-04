@@ -7,6 +7,7 @@
     "start": "node server.js",
     "dev": "node scripts/dev.js",
     "create-user": "node scripts/create-user.js",
+    "reset-password": "node scripts/reset-password.js",
     "migrate-sqlite": "node scripts/migrate-sqlite.js",
     "test": "node --test test/*.test.js",
     "seed-units": "node scripts/seed-units.js"

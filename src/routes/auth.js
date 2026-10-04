@@ -16,6 +16,10 @@ r.post('/login', async (req, res) => {
     await store.audit(require('../db'), null, 'login.fail', 'user', null, { username, ip: req.ip });
     throw new auth.HttpError(401, 'Username atau password salah.');
   }
+  if (user.inactive) {
+    await store.audit(require('../db'), null, 'login.fail', 'user', null, { username, ip: req.ip, reason: 'nonaktif' });
+    throw new auth.HttpError(403, 'Akun ini sedang dinonaktifkan. Hubungi admin untuk mengaktifkannya kembali.');
+  }
   auth.loginOk(req.ip, username);
   auth.setCookie(res, await auth.createSession(user.id, req));
   await store.audit(require('../db'), user.id, 'login', 'user', user.id, { ip: req.ip });

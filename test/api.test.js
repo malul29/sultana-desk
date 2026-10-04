@@ -124,7 +124,8 @@ test('incomplete documents are refused with the list of what is missing, and use
   let r = await call('POST', '/api/surat-konfirmasi', { as: 'boss', body: { nama: 'Budi' } });
   assert.equal(r.status, 422);
   const j = await r.json();
-  assert.ok(j.missing.includes('Alamat (sesuai KTP)') && j.missing.includes('Unggah KTP') && j.missing.includes('Cara Pembayaran'));
+  assert.ok(j.missing.includes('Alamat (sesuai KTP)') && j.missing.includes('Cara Pembayaran'));
+  assert.ok(!j.missing.some((m) => m.startsWith('Unggah')), 'uploads are optional');
   assert.match(j.error, /^Lengkapi dulu: /);
   // every kind of document enforces it
   for (const u of ['kwitansi', 'tanda-terima', 'surat-pemesanan']) assert.equal((await call('POST', '/api/' + u, { as: 'boss', body: { tanggal: '2026-09-30' } })).status, 422, u);
@@ -132,7 +133,7 @@ test('incomplete documents are refused with the list of what is missing, and use
   assert.equal((await call('POST', '/api/kwitansi', { as: 'boss', body: kwDoc({ penandatangan: '  ' }) })).status, 422);
   assert.equal((await call('POST', '/api/tanda-terima', { as: 'boss', body: ttDoc({ gambar: '' }) })).status, 422);
   assert.equal(await nextNo('boss'), before, 'refused documents must not consume a number');
-  assert.equal((await (await call('GET', '/api/documents', { as: 'boss' })).json()).length, 0);
+  assert.equal((await (await call('GET', '/api/documents', { as: 'boss' })).json()).total, 0);
 });
 
 test('conditional requirements: transfer needs bank + account, DP needs its number, KPR needs a schedule', async () => {
@@ -235,20 +236,19 @@ test('unit flow: SKU marks the unit dipesan, Kwitansi marks it terjual, later re
   assert.equal((await call('POST', `/api/units/${a1.id}`, { as: 'boss', body: { status: 'lunas' } })).status, 400);
 });
 
-test('SPU needs KK, rekening koran and surat nikah only for KPR', async () => {
-  const base = { noUnit: 'A-02', type: 'Executive' };
-  const keras = await call('POST', '/api/surat-pemesanan', { as: 'boss', body: unitDoc({ ...base, files: await files('boss', ['ktp', 'npwp']) }) });
-  assert.equal(keras.status, 200, 'cash needs only KTP + NPWP');
+test('uploads are optional: a document prints without them, and with them they are attached', async () => {
+  const none = await call('POST', '/api/surat-pemesanan', { as: 'boss', body: unitDoc({ noUnit: 'A-02', type: 'Executive' }) });
+  assert.equal(none.status, 200, 'no KTP/NPWP needed');
   const a2 = await unitOf('boss', 'A-02'); await call('POST', `/api/units/${a2.id}`, { as: 'boss', body: { status: 'tersedia' } });
-  const kprDoc = { ...base, cara: { tipe: 'kpr' }, jadwal: { booking: J.booking, kali: 2, mulai: '2026-11-05', cicilan: [{ jumlah: '1000000' }, { jumlah: '1000000' }], pelunasan: { tanggal: '2027-12-01', jumlah: '600000000' } } };
-  const r1 = await call('POST', '/api/surat-pemesanan', { as: 'boss', body: unitDoc({ ...kprDoc, files: await files('boss', ['ktp', 'npwp']) }) });
-  assert.equal(r1.status, 422);
-  assert.deepEqual((await r1.json()).missing, ['Unggah Kartu Keluarga (KK)', 'Unggah Rekening Koran', 'Unggah Surat Nikah']);
-  const r2 = await call('POST', '/api/surat-pemesanan', { as: 'boss', body: unitDoc({ ...kprDoc, files: await files('boss', ['ktp', 'npwp', 'kk', 'rekening', 'nikah']) }) });
-  assert.equal(r2.status, 200);
-  // the same unit-form with SKU: KPR does not add requirements there
+  const kprDoc = { noUnit: 'A-02', type: 'Executive', cara: { tipe: 'kpr' }, jadwal: { booking: J.booking, kali: 2, mulai: '2026-11-05', cicilan: [{ jumlah: '1000000' }, { jumlah: '1000000' }], pelunasan: { tanggal: '2027-12-01', jumlah: '600000000' } } };
+  const some = await call('POST', '/api/surat-pemesanan', { as: 'boss', body: unitDoc({ ...kprDoc, files: await files('boss', ['ktp']) }) });
+  assert.equal(some.status, 200, 'KPR with only some of the files');
+  const got = await (await call('GET', `/api/documents/${(await some.json()).id}`, { as: 'boss' })).json();
+  assert.deepEqual(got.files.map((f) => f.kind), ['ktp']);
   const a2b = await unitOf('boss', 'A-02'); await call('POST', `/api/units/${a2b.id}`, { as: 'boss', body: { status: 'tersedia' } });
-  assert.equal((await call('POST', '/api/surat-konfirmasi', { as: 'boss', body: unitDoc({ ...base, cara: { tipe: 'kpr' }, jadwal: { ...J, kali: 1, mulai: '2026-11-05', cicilan: [{ jumlah: '1' }], pelunasan: { tanggal: '2027-01-01', jumlah: '1' } }, files: await files('boss', ['ktp', 'npwp']) }) })).status, 200);
+  // a file that is not valid is still refused when it is given
+  const bogus = await call('POST', '/api/surat-pemesanan', { as: 'boss', body: unitDoc({ noUnit: 'A-02', type: 'Executive', files: { ktp: '00000000-0000-0000-0000-000000000000' } }) });
+  assert.equal(bogus.status, 422);
 });
 
 test('admin edits unit details in any status; staff cannot', async () => {
@@ -291,12 +291,14 @@ test('only the admin can correct a printed document; number stays, unit stock fo
   assert.equal((await call('PUT', `/api/documents/${made.id}`, { as: 'boss', body: { ...fixed, noUnit: 'B-01' } })).status, 200, 'it already holds B-01');
   const b2again = await unitOf('boss', 'B-02'); await call('POST', `/api/units/${b2again.id}`, { as: 'boss', body: { status: 'terjual' } });
   assert.equal((await call('PUT', `/api/documents/${made.id}`, { as: 'boss', body: { ...fixed, noUnit: 'B-02' } })).status, 409, 'a sold unit cannot be taken over');
-  const list = await (await call('GET', '/api/documents?q=Dedi', { as: 'boss' })).json();
+  const list = (await (await call('GET', '/api/documents?q=Dedi', { as: 'boss' })).json()).rows;
   assert.equal(list[0].edited, true);
 });
 
 test('sales report: only units still reserved/sold count, by type, payment method, month and sales', async () => {
-  const rep = await (await call('GET', '/api/report', { as: 'sales1' })).json();
+  assert.equal((await call('GET', '/api/report', { as: 'sales1' })).status, 403, 'the report is for admins only');
+  assert.equal((await call('GET', '/api/report/csv', { as: 'sales1' })).status, 403, 'and so is its CSV');
+  const rep = await (await call('GET', '/api/report', { as: 'boss' })).json();
   if (process.env.DEBUG_REPORT) console.log(JSON.stringify(rep, null, 1));
   assert.equal(rep.stock.total, rep.stock.tersedia + rep.stock.dipesan + rep.stock.terjual);
   assert.equal(rep.sales.jumlah, rep.rows.length);
@@ -349,8 +351,25 @@ test('numbering restarts at 001 every month, and continues a month that already 
   assert.equal(await mk('2027-05-10'), '005/SL-BSS/V/2027');
 });
 
+test('document history is paged: stable newest-first pages, clamped page, fixed page sizes, filters apply to the count', async () => {
+  const get = async (qs) => (await call('GET', '/api/documents' + qs, { as: 'boss' })).json();
+  const all = await get('?per=100');
+  assert.equal(all.rows.length, Math.min(100, all.total));
+  assert.ok(all.total >= 12, 'earlier tests left enough documents');
+  const p1 = await get('?per=10&page=1'), p2 = await get('?per=10&page=2');
+  assert.equal(p1.per, 10); assert.equal(p1.rows.length, 10); assert.equal(p1.pages, Math.ceil(all.total / 10));
+  assert.deepEqual(p1.rows.map((r) => r.id), all.rows.slice(0, 10).map((r) => r.id), 'page 1 = the newest ten');
+  assert.deepEqual(p2.rows.map((r) => r.id), all.rows.slice(10, 20).map((r) => r.id), 'page 2 continues without overlap');
+  const past = await get('?per=10&page=9999');
+  assert.equal(past.page, past.pages, 'a page past the end gives the last page'); assert.ok(past.rows.length > 0);
+  assert.equal((await get('?page=abc')).page, 1);
+  assert.equal((await get('?per=7')).per, 25, 'unknown page sizes fall back to the default');
+  const one = await get('?q=Budi&jenis=surat-konfirmasi&per=10');
+  assert.ok(one.total >= 1 && one.total < all.total, 'the count follows the filter');
+});
+
 test('history lists documents with author and files; re-download keeps the number', async () => {
-  const list = await (await call('GET', '/api/documents?q=Budi&jenis=surat-konfirmasi', { as: 'boss' })).json();
+  const list = (await (await call('GET', '/api/documents?q=Budi&jenis=surat-konfirmasi', { as: 'boss' })).json()).rows;
   assert.ok(list.length >= 1);
   const row = list.find((d) => d.created_by === 'Sales Satu');
   assert.ok(row && row.files.map((f) => f.kind).sort().join() === 'ktp,npwp');
@@ -365,7 +384,10 @@ test('disabling a user ends their session; password reset forces re-login', asyn
   assert.equal((await call('GET', '/api/auth/me', { as: 'sales1' })).status, 200);
   assert.equal((await call('PATCH', `/api/users/${s1.id}`, { as: 'boss', body: { active: false } })).status, 200);
   assert.equal((await call('GET', '/api/auth/me', { as: 'sales1' })).status, 401);
-  assert.equal((await login('sales1', 'sales-pass-1')).status, 401);
+  const off = await login('sales1', 'sales-pass-1');
+  assert.equal(off.status, 403, 'right password but deactivated: say so instead of "wrong password"');
+  assert.match((await off.json()).error, /dinonaktifkan/);
+  assert.equal((await login('sales1', 'wrong-password-x')).status, 401, 'a wrong password reveals nothing about the account');
   await call('PATCH', `/api/users/${s1.id}`, { as: 'boss', body: { active: true, password: 'brand-new-pass' } });
   assert.equal((await login('sales1', 'brand-new-pass')).status, 200);
 });
@@ -373,6 +395,16 @@ test('disabling a user ends their session; password reset forces re-login', asyn
 test('login is locked after repeated failures', async () => {
   for (let i = 0; i < 5; i++) await login('ghost', 'bad-password');
   assert.equal((await login('ghost', 'bad-password')).status, 429);
+});
+
+test('the activity list shows at most the latest 100 entries, newest first', async () => {
+  const db = require('../src/db');
+  await db.query("INSERT INTO audit_log (action, entity, detail) SELECT 'login', 'flood-test', '{}'::jsonb FROM generate_series(1, 130)");
+  const rows = await (await call('GET', '/api/users/audit/log', { as: 'boss' })).json();
+  assert.equal(rows.length, 100);
+  assert.ok(rows.every((r, i) => i === 0 || r.id < rows[i - 1].id), 'newest first');
+  assert.equal((await call('GET', '/api/users/audit/log', { as: 'sales1' })).status, 403, 'admins only');
+  await db.query("DELETE FROM audit_log WHERE entity = 'flood-test'"); // leave the log as it was for the other tests
 });
 
 test('audit trail records the work', async () => {

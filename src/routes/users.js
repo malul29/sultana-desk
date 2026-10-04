@@ -14,6 +14,6 @@ r.patch('/:id', async (req, res) => {
   await store.updateUser(uid(req), { name: b.name, role: b.role, active: b.active, password: b.password || undefined }, req.user);
   res.json({ ok: true });
 });
-r.get('/audit/log', async (_req, res) => res.json(await store.listAudit(200)));
+r.get('/audit/log', async (_req, res) => res.json(await store.listAudit()));
 
 module.exports = r;

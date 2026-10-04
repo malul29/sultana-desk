@@ -126,16 +126,24 @@ async function updateDocument(id, data, user, render) {
   });
 }
 
-async function listDocuments({ q = '', jenis = '' } = {}) {
-  const like = `%${str(q)}%`;
+// One page of the document history (newest first). `per` is limited to a few sizes; a page past the end
+// returns the last page, so a stale page number after filtering never shows an empty table.
+const DOC_PAGE_SIZES = [10, 25, 50, 100];
+async function listDocuments({ q = '', jenis = '', page = 1, per = 25 } = {}) {
+  const like = `%${str(q)}%`, kind = str(jenis);
+  const size = DOC_PAGE_SIZES.includes(Number(per)) ? Number(per) : 25;
+  const where = "WHERE ($1 = '' OR d.jenis = $1) AND (d.no ILIKE $2 OR d.nama ILIKE $2 OR d.no_unit ILIKE $2)";
+  const total = (await db.query(`SELECT count(*)::int AS n FROM documents d ${where}`, [kind, like])).rows[0].n;
+  const pages = Math.max(1, Math.ceil(total / size));
+  const cur = Math.min(Math.max(1, Math.trunc(Number(page)) || 1), pages);
   const r = await db.query(
     `SELECT d.id, d.no, d.jenis, d.nama, d.no_unit, d.jumlah, d.tanggal, ${TS('d.created_at')} AS created_at, u.name AS created_by,
             d.edited_at IS NOT NULL AS edited,
             (SELECT json_agg(json_build_object('kind', f.kind, 'id', f.id::text, 'filename', f.filename, 'mime', f.mime, 'size', f.size) ORDER BY f.kind) FROM uploads f WHERE f.document_id = d.id) AS files
      FROM documents d LEFT JOIN users u ON u.id = d.created_by
-     WHERE ($1 = '' OR d.jenis = $1) AND (d.no ILIKE $2 OR d.nama ILIKE $2 OR d.no_unit ILIKE $2)
-     ORDER BY d.id DESC LIMIT 500`, [str(jenis), like]);
-  return r.rows;
+     ${where}
+     ORDER BY d.id DESC LIMIT $3 OFFSET $4`, [kind, like, size, (cur - 1) * size]);
+  return { rows: r.rows, total, page: cur, per: size, pages };
 }
 const getDocument = async (id) => (await db.query('SELECT id, no, jenis, nama, no_unit, jumlah, tanggal, data, created_by, created_at, pdf IS NOT NULL AS has_pdf FROM documents WHERE id = $1', [id])).rows[0] || null;
 const getDocumentFiles = async (id) => (await db.query('SELECT kind, id::text AS id, filename, mime, size FROM uploads WHERE document_id = $1 ORDER BY kind', [id])).rows;
@@ -326,7 +334,8 @@ async function authenticate(username, password) {
   const u = (await db.query('SELECT * FROM users WHERE lower(username) = lower($1)', [str(username)])).rows[0];
   // Verify against a dummy hash for unknown users so timing does not reveal which usernames exist.
   const ok = await verifyPassword(String(password ?? ''), u ? u.password_hash : DUMMY);
-  if (!u || !u.active || !ok) return null;
+  if (!u || !ok) return null;
+  if (!u.active) return { inactive: true }; // only said after the right password, so it does not reveal which usernames exist
   await db.query('UPDATE users SET last_login = now() WHERE id = $1', [u.id]);
   return { id: u.id, username: u.username, name: u.name, role: u.role };
 }
@@ -339,8 +348,9 @@ async function ensureAdmin(cfg) {
   return true;
 }
 
-const listAudit = async (limit = 200) => (await db.query(
-  `SELECT a.id, ${TS('a.at')} AS at, u.name AS user, a.action, a.entity, a.entity_id, a.detail FROM audit_log a LEFT JOIN users u ON u.id = a.user_id ORDER BY a.id DESC LIMIT $1`, [limit])).rows;
+const AUDIT_MAX = 100; // the activity list shows at most the latest 100 entries
+const listAudit = async (limit = AUDIT_MAX) => (await db.query(
+  `SELECT a.id, ${TS('a.at')} AS at, u.name AS user, a.action, a.entity, a.entity_id, a.detail FROM audit_log a LEFT JOIN users u ON u.id = a.user_id ORDER BY a.id DESC LIMIT $1`, [Math.min(Math.max(1, Math.trunc(Number(limit)) || AUDIT_MAX), AUDIT_MAX)])).rows;
 
 module.exports = {
   audit, salesReport, saveUpload, getUpload, deleteUpload, purgeOrphanUploads, createDocument, updateDocument, listDocuments, getDocument, getDocumentFiles, getPdf, savePdf, listUnits, addUnits, updateUnit, deleteUnit,
