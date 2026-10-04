@@ -131,7 +131,7 @@ async function listDocuments({ q = '', jenis = '' } = {}) {
   const r = await db.query(
     `SELECT d.id, d.no, d.jenis, d.nama, d.no_unit, d.jumlah, d.tanggal, ${TS('d.created_at')} AS created_at, u.name AS created_by,
             d.edited_at IS NOT NULL AS edited,
-            (SELECT json_agg(json_build_object('kind', f.kind, 'id', f.id::text, 'filename', f.filename) ORDER BY f.kind) FROM uploads f WHERE f.document_id = d.id) AS files
+            (SELECT json_agg(json_build_object('kind', f.kind, 'id', f.id::text, 'filename', f.filename, 'mime', f.mime, 'size', f.size) ORDER BY f.kind) FROM uploads f WHERE f.document_id = d.id) AS files
      FROM documents d LEFT JOIN users u ON u.id = d.created_by
      WHERE ($1 = '' OR d.jenis = $1) AND (d.no ILIKE $2 OR d.nama ILIKE $2 OR d.no_unit ILIKE $2)
      ORDER BY d.id DESC LIMIT 500`, [str(jenis), like]);

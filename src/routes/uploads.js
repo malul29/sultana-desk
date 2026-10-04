@@ -33,13 +33,17 @@ r.post('/', raw({ type: () => true, limit: MAX }), async (req, res) => {
   res.json(await store.saveUpload({ user: req.user, kind, filename: cleanName(req.query.name, kind, mime), mime, data }));
 });
 
+// View (inline, default) or save (?download=1). The body was type-checked from its bytes on upload and is only ever
+// served as PDF / JPG / PNG / WEBP with nosniff. No CSP "sandbox" here: it blanks Chrome's built-in PDF viewer.
+// The app-wide X-Frame-Options: DENY is relaxed to same-origin so the in-page viewer can embed the file.
 r.get('/:id', async (req, res) => {
   const u = await store.getUpload(req.params.id);
   if (!u) throw new auth.HttpError(404, 'Berkas tidak ditemukan.');
   res.set({
     'Content-Type': u.mime,
-    'Content-Disposition': `${req.query.download ? 'attachment' : 'inline'}; filename="${u.filename}"`,
-    'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; sandbox",
+    'Content-Disposition': `${req.query.download === '1' ? 'attachment' : 'inline'}; filename="${u.filename}"`,
+    'X-Frame-Options': 'SAMEORIGIN',
+    'Content-Security-Policy': "default-src 'none'; img-src 'self' data:; style-src 'unsafe-inline'; frame-ancestors 'self'",
     'Cache-Control': 'private, no-store',
   });
   res.send(u.data);

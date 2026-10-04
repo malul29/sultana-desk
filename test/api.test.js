@@ -162,7 +162,15 @@ test('uploads: only PDF/JPG/PNG/WEBP by content, owned by the uploader, one use 
   assert.equal(f.mime, 'image/png'); assert.equal(f.filename, 'KTP Budi_.png'); assert.equal(f.kind, 'ktp');
   const got = await call('GET', `/api/uploads/${f.id}`, { as: 'sales1' });
   assert.equal(got.status, 200); assert.equal(got.headers.get('content-type'), 'image/png');
-  assert.match(got.headers.get('content-security-policy'), /sandbox/);
+  // view: inline, embeddable by this app only (no CSP sandbox, it blanks Chrome's PDF viewer); download: attachment
+  assert.match(got.headers.get('content-disposition'), /^inline;/);
+  assert.equal(got.headers.get('x-frame-options'), 'SAMEORIGIN');
+  assert.equal(got.headers.get('x-content-type-options'), 'nosniff');
+  assert.match(got.headers.get('content-security-policy'), /default-src 'none'.*frame-ancestors 'self'/);
+  assert.doesNotMatch(got.headers.get('content-security-policy'), /sandbox/);
+  const dl = await call('GET', `/api/uploads/${f.id}?download=1`, { as: 'sales1' });
+  assert.match(dl.headers.get('content-disposition'), /^attachment; filename="KTP Budi_\.png"$/);
+  assert.equal((await call('GET', `/api/uploads/${f.id}`)).status, 401, 'files need a login');
   assert.equal((await call('DELETE', `/api/uploads/${f.id}`, { as: 'sales1' })).status, 200);
   assert.equal((await call('GET', `/api/uploads/${f.id}`, { as: 'sales1' })).status, 404);
   // someone else's upload cannot be attached to my document
@@ -324,6 +332,21 @@ test('numbers are unique and gap-free under concurrent requests', async () => {
   assert.equal(new Set(nums).size, 12);
   assert.deepEqual(nums.map((n) => Number(n.slice(0, 3))).sort((a, b) => a - b), Array.from({ length: 12 }, (_, i) => start + i));
   assert.match(nums[0], /\/SL-BSS\/X\/2026$/);
+});
+
+test('numbering restarts at 001 every month, and continues a month that already has older numbers', async () => {
+  const mk = async (tanggal) => (await (await call('POST', '/api/tanda-terima', { as: 'boss', body: ttDoc({ tanggal }) })).json()).no;
+  assert.equal(await nextNo('boss', '2027-03-02'), '001/SL-BSS/III/2027');
+  assert.equal(await mk('2027-03-02'), '001/SL-BSS/III/2027');
+  assert.equal(await mk('2027-03-20'), '002/SL-BSS/III/2027');
+  assert.equal(await mk('2027-04-01'), '001/SL-BSS/IV/2027', 'a new month starts again at 001');
+  assert.equal(await mk('2027-03-28'), '003/SL-BSS/III/2027', 'an earlier month keeps its own sequence');
+  assert.equal(await nextNo('boss', '2027-03-30'), '004/SL-BSS/III/2027');
+  // a month numbered under the old single counter: carry on after its highest number
+  const db = require('../src/db');
+  await db.query("INSERT INTO documents (no, jenis, nama, data) VALUES ('004/SL-BSS/V/2027', 'tanda-terima', 'lama', '{}')");
+  assert.equal(await nextNo('boss', '2027-05-10'), '005/SL-BSS/V/2027');
+  assert.equal(await mk('2027-05-10'), '005/SL-BSS/V/2027');
 });
 
 test('history lists documents with author and files; re-download keeps the number', async () => {
