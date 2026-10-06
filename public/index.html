@@ -572,7 +572,7 @@
       <div class="radios" data-label="Untuk Pembayaran"><label><input type="radio" name="untuk" value="booking"> Booking Fee</label><label><input type="radio" name="untuk" value="dp"> Uang Muka (DP)</label></div>
       <div class="grid"><label class="cond" data-when="untuk=dp">DP ke-<input name="dpKe" inputmode="numeric"></label><label>Nomor Unit<input name="noUnit"></label><label>Nama penandatangan<input name="penandatangan"></label></div>
     </fieldset>
-    <div class="actions"><button class="go print-btn"><span class="lbl">Cetak</span><i class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg></i></button><button type="button" class="ghost reset">Kosongkan</button><span class="msg"></span></div>
+    <div class="actions"><button type="button" class="ghost blank-btn" data-blank="/api/kwitansi-kosong.pdf" title="Cetak kwitansi tanpa isi untuk diisi tulisan tangan">Kwitansi kosong</button><button class="go print-btn"><span class="lbl">Cetak</span><i class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg></i></button><button type="button" class="ghost reset">Kosongkan</button><span class="msg"></span></div>
   </form>
 
   <!-- TANDA TERIMA -->
@@ -688,7 +688,7 @@
     <div class="pv-bar"><span>Preview Dokumen (live)</span></div>
     <div id="pvbox"><div id="pvinner"><div id="paper"></div></div></div>
     <p class="pv-note" id="pvNote">Tampilan perkiraan Rangkap 1. PDF berisi 3 rangkap; tiap rangkap: surat, syarat &amp; ketentuan, dan denah lokasi unit.</p>
-    <div class="actions pv-actions"><span class="msg" id="pvMsg"></span><button type="button" class="ghost" id="pvReset">Kosongkan</button><button type="button" class="go print-btn" id="pvGo"><span class="lbl">Cetak</span><i class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg></i></button></div>
+    <div class="actions pv-actions"><span class="msg" id="pvMsg"></span><button type="button" class="ghost" id="pvBlank" hidden>Kwitansi kosong</button><button type="button" class="ghost" id="pvReset">Kosongkan</button><button type="button" class="go print-btn" id="pvGo"><span class="lbl">Cetak</span><i class="arr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg></i></button></div>
   </section>
   <div id="mpCol" aria-label="Masterplan">
     <div class="mp">
@@ -764,7 +764,7 @@ const setTab = (t) => {
   if ($('#pvToggle')) $('#pvToggle').style.display = PV_FORMS[t] ? '' : 'none';
   setPv(!!PV_FORMS[t] && pvWanted);
   noteKind = ''; setNote(null, '');
-  $('#pvGo').classList.remove('blocked'); $('#pvReset').hidden = !document.querySelector('#' + t + ' .reset');
+  $('#pvGo').classList.remove('blocked'); $('#pvReset').hidden = !document.querySelector('#' + t + ' .reset'); $('#pvBlank').hidden = t !== 'kw';
   if (PV_FORMS[t] && document.getElementById(t)) updateState(document.getElementById(t));
 };
 $('#tabs').onclick = (e) => {
@@ -1674,6 +1674,15 @@ const pdfTab = () => {
   if (w) w.document.write('<title>Menyiapkan PDF…</title><p style="font:15px system-ui,sans-serif;padding:24px;color:#555">Menyiapkan PDF…</p>');
   return w;
 };
+
+// Blank receipt for filling in by hand: a fixed PDF, no number, nothing saved.
+const openBlank = (url) => {
+  const tab = pdfTab();
+  if (tab && !tab.closed) tab.location.href = url;
+  else { const m = $('#pvMsg'); m.className = 'msg'; m.innerHTML = 'Pop-up diblokir browser — <a href="' + url + '" target="_blank" rel="noopener">Buka PDF kwitansi kosong</a>'; }
+};
+$('#pvBlank').onclick = () => openBlank('/api/kwitansi-kosong.pdf');
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-blank]'); if (b) { e.preventDefault(); openBlank(b.dataset.blank); } });
 
 forms.forEach((f) => (f.onsubmit = async (e) => {
   e.preventDefault();

@@ -62,6 +62,13 @@ r.get('/syarat-pesanan.pdf', async (req, res) => {
   sendFile(res, termsPdf, 'Syarat_dan_Ketentuan_Surat_Pesanan.pdf', 'application/pdf', !req.query.download);
 });
 
+// Blank receipt to fill in by hand: like the terms sheet it is not numbered and not stored.
+let blankKwitansiPdf = null;
+r.get('/kwitansi-kosong.pdf', async (req, res) => {
+  blankKwitansiPdf ||= await pdf.docxToPdf(await docs.kwitansiKosong());
+  sendFile(res, blankKwitansiPdf, 'Kwitansi_Kosong.pdf', 'application/pdf', !req.query.download);
+});
+
 // Create a numbered document. Returns where to fetch its PDF; the PDF itself is made right
 // after the database commit so a slow conversion never holds the numbering lock.
 for (const [jenis, [render, name]] of Object.entries(TYPES)) {

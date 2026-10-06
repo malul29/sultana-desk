@@ -85,7 +85,7 @@ test('app and api need a session; login page is public', async () => {
 test('every data endpoint refuses anonymous requests', async () => {
   for (const [m, u] of [['GET', '/api/unit-types'], ['GET', '/api/company'], ['GET', '/api/terms'], ['GET', '/api/next-number'], ['GET', '/api/documents'], ['GET', '/api/documents/1'],
     ['GET', '/api/documents/1/download'], ['PUT', '/api/documents/1'], ['POST', '/api/kwitansi'], ['POST', '/api/tanda-terima'], ['POST', '/api/surat-konfirmasi'], ['POST', '/api/surat-pemesanan'],
-    ['GET', '/api/syarat-pesanan.pdf'], ['POST', '/api/uploads?kind=ktp'], ['GET', '/api/uploads/x'], ['GET', '/api/report'], ['GET', '/api/report/csv'],
+    ['GET', '/api/syarat-pesanan.pdf'], ['GET', '/api/kwitansi-kosong.pdf'], ['POST', '/api/uploads?kind=ktp'], ['GET', '/api/uploads/x'], ['GET', '/api/report'], ['GET', '/api/report/csv'],
     ['GET', '/api/units'], ['GET', '/api/users']]) {
     const r = await call(m, u, m === 'GET' ? {} : { body: {} });
     assert.equal(r.status, 401, `${m} ${u} should need login`);
@@ -324,6 +324,17 @@ test('fixed terms document comes as a printable PDF', { skip: !pdf.available() &
   const r = await call('GET', '/api/syarat-pesanan.pdf', { as: 'boss' });
   assert.equal(r.status, 200); assert.equal(r.headers.get('content-type'), 'application/pdf');
   assert.equal(Buffer.from(await r.arrayBuffer()).subarray(0, 5).toString(), '%PDF-');
+});
+
+test('blank receipt: a printable PDF, no number used, nothing stored', async () => {
+  const before = await nextNo('boss'), n = (await (await call('GET', '/api/documents', { as: 'boss' })).json()).total;
+  const r = await call('GET', '/api/kwitansi-kosong.pdf', { as: 'sales1' });
+  assert.equal(r.status, 200); assert.equal(r.headers.get('content-type'), 'application/pdf');
+  assert.match(r.headers.get('content-disposition'), /^inline;/);
+  assert.equal((await r.arrayBuffer()).byteLength > 1000, true);
+  assert.match((await call('GET', '/api/kwitansi-kosong.pdf?download=1', { as: 'sales1' })).headers.get('content-disposition'), /^attachment; filename="Kwitansi_Kosong\.pdf"/);
+  assert.equal(await nextNo('boss'), before, 'no document number is consumed');
+  assert.equal((await (await call('GET', '/api/documents', { as: 'boss' })).json()).total, n, 'nothing is stored');
 });
 
 test('numbers are unique and gap-free under concurrent requests', async () => {
