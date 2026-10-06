@@ -103,7 +103,7 @@ Coolify sudah mengurus domain + HTTPS (Traefik), jadi pakai **`docker-compose.co
 4. **Environment Variables**: isi `ADMIN_USERNAME`, `ADMIN_PASSWORD` (min. 8 karakter), opsional `ADMIN_NAME`. Password database dibuat otomatis oleh Coolify (`SERVICE_PASSWORD_POSTGRES`).
 5. **Domain**: pada service **app** isi `https://desk.domain-anda.co.id:3000` (DNS A record harus sudah ke IP server). Service **db** tidak diberi domain.
 6. **Deploy**. Build pertama ±5–10 menit (memasang LibreOffice).
-7. Isi stok unit sekali: buka service **app → Terminal**, jalankan `node scripts/seed-units.js`.
+7. Stok unit terisi otomatis saat aplikasi pertama kali menyala: 36 unit, semuanya *tersedia* (log: "Stok unit awal dibuat"). Tidak ada yang perlu dijalankan. `node scripts/seed-units.js` hanya untuk menambahkan kembali unit yang hilang secara manual.
 8. **Backup harian ke backup storage** (di server, lewat SSH; ganti `/mnt/backup` dengan lokasi backup storage Anda, cek dengan `df -h`). Nama container database di Coolify berawalan `db-`:
    ```
    mkdir -p /mnt/backup/sultana

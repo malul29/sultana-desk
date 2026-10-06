@@ -341,6 +341,19 @@ async function authenticate(username, password) {
 }
 let DUMMY = 'scrypt$00000000000000000000000000000000$' + '00'.repeat(64);
 
+// First start of an installation: fill the stock with the 36 template units, all "tersedia". Runs at most once per
+// database (a marker row is written even when units already exist), so units an admin later deletes stay deleted.
+async function seedDefaultUnits() {
+  return db.tx(async (c) => {
+    const marked = await c.query("INSERT INTO counters (name, last) VALUES ('seed-units', 1) ON CONFLICT (name) DO NOTHING RETURNING name");
+    if (!marked.rowCount) return 0;                                   // already handled on an earlier start
+    if ((await c.query('SELECT count(*)::int n FROM units')).rows[0].n) return 0; // existing installation: leave its stock alone
+    let added = 0;
+    for (const u of require('../lib/unit-plan').UNITS) added += (await c.query('INSERT INTO units (no_unit, type) VALUES ($1, $2) ON CONFLICT (lower(no_unit)) DO NOTHING', [u.no_unit, u.type])).rowCount;
+    return added;
+  });
+}
+
 async function ensureAdmin(cfg) {
   const n = (await db.query('SELECT count(*)::int n FROM users')).rows[0].n;
   if (n || !cfg.username || !cfg.password) return false;
@@ -354,5 +367,5 @@ const listAudit = async (limit = AUDIT_MAX) => (await db.query(
 
 module.exports = {
   audit, salesReport, saveUpload, getUpload, deleteUpload, purgeOrphanUploads, createDocument, updateDocument, listDocuments, getDocument, getDocumentFiles, getPdf, savePdf, listUnits, addUnits, updateUnit, deleteUnit,
-  listUsers, createUser, updateUser, changeOwnPassword, authenticate, ensureAdmin, listAudit, str,
+  listUsers, createUser, updateUser, changeOwnPassword, authenticate, ensureAdmin, seedDefaultUnits, listAudit, str,
 };

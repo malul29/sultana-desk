@@ -13,6 +13,9 @@ async function main() {
     console.warn('PERINGATAN: belum ada pengguna. Set ADMIN_USERNAME & ADMIN_PASSWORD di .env, atau jalankan: npm run create-user');
   }
 
+  const seeded = await store.seedDefaultUnits();
+  if (seeded) console.log(`Stok unit awal dibuat: ${seeded} unit tersedia.`);
+
   const app = createApp();
   const server = app.listen(config.port, () => console.log(`Sultana Desk → http://localhost:${config.port}`));
 
