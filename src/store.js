@@ -233,6 +233,8 @@ async function deleteUnit(id, user) {
 const CARA_LABEL = { 'tunai-keras': 'Tunai Keras', 'tunai-bertahap': 'Tunai Bertahap', kpr: 'KPR' };
 
 // A "sale" = the latest SKU/SPU of a unit that is still reserved/sold (cancelled units drop out).
+// A reserved/sold unit that has no SKU/SPU at all (e.g. only a receipt was made) is listed too, flagged `tanpaSurat`,
+// with no price: it counts as a unit but adds nothing to the value until its SKU/SPU exists.
 // Period filters on the document date. Stock figures are always current.
 async function salesReport({ from, to } = {}) {
   const f = isoDate(from), t = isoDate(to);
@@ -244,11 +246,24 @@ async function salesReport({ from, to } = {}) {
        ORDER BY lower(d.no_unit), d.id DESC) x
      WHERE ($1::date IS NULL OR x.tanggal >= $1) AND ($2::date IS NULL OR x.tanggal <= $2)
      ORDER BY x.tanggal DESC NULLS LAST, x.id DESC`, [f, t])).rows;
-  const rows = sold.map((r) => ({
-    id: r.id, tanggal: r.tanggal, no: r.no, jenis: r.jenis, nama: r.nama, unit: r.no_unit, type: r.type || '',
-    harga: Number(r.data && r.data.harga) || 0, cara: CARA_LABEL[r.data && r.data.cara && r.data.cara.tipe] || '—',
-    sales: str(r.data && r.data.sales) || '—', status: r.status,
-  }));
+  const noLetter = (await db.query(
+    `SELECT u.no_unit, u.type, u.status, u.pemesan, u.doc_no, d.id, d.jenis, d.tanggal
+     FROM units u LEFT JOIN documents d ON d.no = u.doc_no
+     WHERE u.status <> 'tersedia'
+       AND NOT EXISTS (SELECT 1 FROM documents s WHERE lower(s.no_unit) = lower(u.no_unit) AND s.jenis IN ('surat-konfirmasi', 'surat-pemesanan'))
+       AND ($1::date IS NULL OR d.tanggal >= $1) AND ($2::date IS NULL OR d.tanggal <= $2)
+     ORDER BY d.tanggal DESC NULLS LAST, u.id DESC`, [f, t])).rows;
+  const rows = [
+    ...sold.map((r) => ({
+      id: r.id, tanggal: r.tanggal, no: r.no, jenis: r.jenis, nama: r.nama, unit: r.no_unit, type: r.type || '',
+      harga: Number(r.data && r.data.harga) || 0, cara: CARA_LABEL[r.data && r.data.cara && r.data.cara.tipe] || '—',
+      sales: str(r.data && r.data.sales) || '—', status: r.status, tanpaSurat: false,
+    })),
+    ...noLetter.map((r) => ({
+      id: r.id ?? null, tanggal: r.tanggal || null, no: r.doc_no || '—', jenis: r.jenis || '', nama: r.pemesan || '', unit: r.no_unit, type: r.type || '',
+      harga: 0, cara: 'Tanpa SKU/SPU', sales: 'Tanpa SKU/SPU', status: r.status, tanpaSurat: true,
+    })),
+  ];
   const group = (keyFn) => {
     const m = new Map();
     for (const r of rows) { const k = keyFn(r); const g = m.get(k) || { key: k, jumlah: 0, nilai: 0 }; g.jumlah += 1; g.nilai += r.harga; m.set(k, g); }
@@ -268,7 +283,7 @@ async function salesReport({ from, to } = {}) {
   return {
     period: { from: f, to: t }, stock,
     sales: {
-      ...sum(rows), terjual: sum(rows.filter((r) => r.status === 'terjual')), dipesan: sum(rows.filter((r) => r.status === 'dipesan')),
+      ...sum(rows), tanpaSurat: rows.filter((r) => r.tanpaSurat).length, dihargai: rows.filter((r) => r.harga > 0).length, terjual: sum(rows.filter((r) => r.status === 'terjual')), dipesan: sum(rows.filter((r) => r.status === 'dipesan')),
       byType: group((r) => r.type || '—').sort((a, b) => a.key.localeCompare(b.key)),
       byCara: group((r) => r.cara).sort((a, b) => b.nilai - a.nilai),
       byMonth: group((r) => (r.tanggal || '').slice(0, 7) || '—').sort((a, b) => a.key.localeCompare(b.key)),

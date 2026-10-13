@@ -14,7 +14,7 @@ r.get('/csv', async (req, res) => {
   const rep = await store.salesReport({ from: isoOrNull(req.query.from), to: isoOrNull(req.query.to) });
   const cell = (v) => { const t = String(v ?? ''); return /[";\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t; };
   const head = ['Tanggal', 'No. Dokumen', 'Pemesan', 'Unit', 'Type', 'Harga (Rp)', 'Cara Bayar', 'Sales', 'Status Unit'];
-  const lines = [head, ...rep.rows.map((x) => [x.tanggal, x.no, x.nama, x.unit, x.type, x.harga, x.cara, x.sales, x.status])].map((l) => l.map(cell).join(';'));
+  const lines = [head, ...rep.rows.map((x) => [x.tanggal, x.no, x.nama, x.unit, x.type, x.tanpaSurat ? '' : x.harga, x.cara, x.sales, x.status])].map((l) => l.map(cell).join(';'));
   res.set({ 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="laporan-penjualan.csv"' });
   res.send('\ufeff' + lines.join('\r\n') + '\r\n');
 });

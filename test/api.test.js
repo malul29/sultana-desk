@@ -295,6 +295,24 @@ test('only the admin can correct a printed document; number stays, unit stock fo
   assert.equal(list[0].edited, true);
 });
 
+test('sales report: a unit sold by receipt only is listed (no price) so units match the stock figures', async () => {
+  const before = await (await call('GET', '/api/report', { as: 'boss' })).json();
+  assert.equal((await call('POST', '/api/units', { as: 'boss', body: { units: [{ no_unit: 'KW-ONLY', type: 'Deluxe' }] } })).status, 200);
+  const made = await call('POST', '/api/kwitansi', { as: 'boss', body: kwDoc({ noUnit: 'KW-ONLY', terimaDari: 'Pembeli Lama', jumlah: 3000000 }) });
+  assert.equal(made.status, 200);
+  const after = await (await call('GET', '/api/report', { as: 'boss' })).json();
+  const row = after.rows.find((r) => r.unit === 'KW-ONLY');
+  assert.ok(row, 'listed although there is no SKU/SPU');
+  assert.equal(row.tanpaSurat, true); assert.equal(row.harga, 0); assert.equal(row.status, 'terjual'); assert.equal(row.nama, 'Pembeli Lama');
+  assert.equal(after.sales.jumlah, before.sales.jumlah + 1, 'it counts as a unit');
+  assert.equal(after.sales.nilai, before.sales.nilai, 'but adds no value');
+  assert.equal(after.sales.tanpaSurat, before.sales.tanpaSurat + 1);
+  assert.equal(after.sales.dihargai, before.sales.dihargai, 'the average only uses priced units');
+  assert.equal(after.sales.terjual.jumlah + after.sales.dipesan.jumlah, after.sales.jumlah);
+  const csv = (await (await call('GET', '/api/report/csv', { as: 'boss' })).text()).split('\n').find((l) => l.includes('KW-ONLY'));
+  assert.match(csv, /;KW-ONLY;Deluxe;;Tanpa SKU\/SPU;/, 'price cell left empty in the CSV');
+});
+
 test('sales report: only units still reserved/sold count, by type, payment method, month and sales', async () => {
   assert.equal((await call('GET', '/api/report', { as: 'sales1' })).status, 403, 'the report is for admins only');
   assert.equal((await call('GET', '/api/report/csv', { as: 'sales1' })).status, 403, 'and so is its CSV');
@@ -305,7 +323,7 @@ test('sales report: only units still reserved/sold count, by type, payment metho
   assert.equal(rep.sales.nilai, rep.rows.reduce((a, r) => a + r.harga, 0));
   assert.equal(rep.sales.jumlah, rep.sales.terjual.jumlah + rep.sales.dipesan.jumlah);
   assert.ok(rep.sales.byType.length && rep.sales.byCara.some((c) => c.key === 'Tunai Keras') && rep.sales.byMonth.some((m) => m.key === '2026-09') && rep.sales.bySales.some((s) => s.key === 'Sari'));
-  assert.ok(rep.rows.every((r) => r.unit && r.no && r.harga > 0));
+  assert.ok(rep.rows.every((r) => r.unit && r.no && (r.tanpaSurat ? r.harga === 0 : r.harga > 0)));
   assert.equal(new Set(rep.rows.map((r) => r.unit.toLowerCase())).size, rep.rows.length, 'one row per unit');
   assert.ok(rep.receipts.jumlah >= 2 && rep.receipts.total >= 7000000);
   const none = await (await call('GET', '/api/report?from=2030-01-01&to=2030-12-31', { as: 'boss' })).json();

@@ -203,6 +203,8 @@
   .upl.done { border-style:solid; border-color:#bcd2b8; background:var(--soft); } .upl.done .us { color:var(--brand-d); font-weight:500; }
   .req { color:#c95a50; font-style:normal; font-weight:700; margin-left:3px; }
   .lt { display:block; }
+  .rp-warn { margin:0 0 12px; padding:8px 12px; border-radius:8px; background:#fef4e6; color:#9c5b05; font-size:12.5px; }
+  #rpTbl .na { color:#9aa59b; }
   .sub .opt { font-weight:400; font-size:12px; color:var(--mute); margin-left:4px; text-transform:none; letter-spacing:0; }
   .sect .opt { font-weight:400; font-size:12px; color:var(--mute); letter-spacing:0; text-transform:none; margin-left:4px; }
   .req-note { margin:0 0 14px; font-size:12px; color:var(--mute); }
@@ -641,6 +643,7 @@
       <div class="cards rp-cards" id="rpCards"></div>
       <div class="rp-grid" id="rpGrid"></div>
       <h4 class="sub">Daftar penjualan</h4>
+      <p class="hint rp-warn" id="rpWarn" style="display:none"></p>
       <div class="tblwrap"><table class="tbl rp-tbl" id="rpTbl"><thead><tr><th>Dokumen</th><th>Pemesan</th><th>Unit</th><th class="r">Harga (Rp)</th><th>Pembayaran</th><th>Status</th></tr></thead><tbody></tbody></table></div>
       <p class="hint" id="rpEmpty" style="display:none">Belum ada penjualan pada periode ini.</p>
     </div>
@@ -1545,7 +1548,7 @@ $('#mpInfo').addEventListener('change', async (e) => {
 
 /* ───────── sales report (below the stock list) ───────── */
 const tglShortID = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? +m[3] + ' ' + ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][+m[2] - 1] + ' ' + m[1] : ''; };
-const rpMonth = (k) => { const m = /^(\d{4})-(\d{2})$/.exec(k); return m ? ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][+m[2] - 1] + ' ' + m[1] : k; };
+const rpMonth = (k) => { if (k === '—') return 'Tanpa tanggal'; const m = /^(\d{4})-(\d{2})$/.exec(k); return m ? ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][+m[2] - 1] + ' ' + m[1] : k; };
 const rpRupiah = (n) => 'Rp ' + (rp(n) || '0');
 const STATUS_LABEL = { tersedia: 'Tersedia', dipesan: 'Dipesan', terjual: 'Terjual' };
 async function loadReport() {
@@ -1563,11 +1566,11 @@ async function loadReport() {
 
   $('#rpCards').className = 'rp-hero';
   $('#rpCards').innerHTML =
-    '<div class="k main"><div><span>Total penjualan</span><b>' + rpRupiah(sl.nilai) + '</b><small>' + sl.jumlah + ' unit · dipesan + terjual</small></div>' +
+    '<div class="k main"><div><span>Total penjualan</span><b>' + rpRupiah(sl.nilai) + '</b><small>' + sl.jumlah + ' unit · dipesan + terjual' + (sl.tanpaSurat ? ' (' + sl.tanpaSurat + ' belum ada SKU/SPU)' : '') + '</small></div>' +
       '<div><div class="split"><i class="a" style="width:' + pct(sl.terjual.nilai, sl.nilai) + '%"></i><i class="b" style="width:' + (sl.nilai ? 100 - pct(sl.terjual.nilai, sl.nilai) : 0) + '%"></i></div>' +
       '<div class="lg"><span><i class="dot a"></i>Terjual <em>' + rpRupiah(sl.terjual.nilai) + '</em> · ' + sl.terjual.jumlah + ' unit</span><span><i class="dot b"></i>Dipesan <em>' + rpRupiah(sl.dipesan.nilai) + '</em> · ' + sl.dipesan.jumlah + ' unit</span></div></div></div>' +
     '<div class="k"><div><span>Uang masuk</span><b>' + rpRupiah(r.receipts.total) + '</b></div><small>' + r.receipts.jumlah + ' kwitansi diterbitkan</small></div>' +
-    '<div class="k"><div><span>Rata-rata harga</span><b>' + (sl.jumlah ? rpRupiah(Math.round(sl.nilai / sl.jumlah)) : '—') + '</b></div><small>per unit terjual / dipesan</small></div>';
+    '<div class="k"><div><span>Rata-rata harga</span><b>' + (sl.dihargai ? rpRupiah(Math.round(sl.nilai / sl.dihargai)) : '—') + '</b></div><small>per unit yang sudah ada harganya</small></div>';
 
   const types = Object.keys({ ...st.byType, ...Object.fromEntries(sl.byType.map((t) => [t.key, 1])) }).sort();
   const valOf = (list, k) => (list.find((x) => x.key === k) || { jumlah: 0, nilai: 0 });
@@ -1586,10 +1589,12 @@ async function loadReport() {
     panel('Per cara bayar', '', hbars(sl.byCara)) +
     panel('Per type', 'penjualan & stok', typeCards, true) +
     panel('Per sales', '', hbars(sl.bySales)) +
-    panel('Ranking unit termahal', '', hbars(r.rows.slice().sort((a, b) => b.harga - a.harga).slice(0, 5).map((x) => ({ key: x.unit + ' · ' + x.nama, jumlah: 1, nilai: x.harga }))));
+    panel('Ranking unit termahal', '', hbars(r.rows.filter((x) => x.harga > 0).sort((a, b) => b.harga - a.harga).slice(0, 5).map((x) => ({ key: x.unit + ' · ' + x.nama, jumlah: 1, nilai: x.harga }))));
   const two = (a, b) => '<b>' + a + '</b><small>' + b + '</small>';
-  $('#rpTbl tbody').innerHTML = r.rows.map((x) => '<tr><td>' + two(esc(x.no), esc(tglID(x.tanggal))) + '</td><td>' + esc(x.nama) + '</td><td>' + two(esc(x.unit), esc(x.type)) + '</td><td class="r mono">' + rp(x.harga) + '</td><td>' + two(esc(x.cara), esc(x.sales)) + '</td><td><span class="pill st-' + x.status + '">' + (STATUS_LABEL[x.status] || x.status) + '</span></td></tr>').join('');
+  $('#rpTbl tbody').innerHTML = r.rows.map((x) => '<tr><td>' + two(esc(x.no), esc(tglID(x.tanggal))) + '</td><td>' + esc(x.nama) + '</td><td>' + two(esc(x.unit), esc(x.type)) + '</td><td class="r mono">' + (x.tanpaSurat ? '<span class="na" title="Belum ada SKU/SPU, harga belum diketahui">—</span>' : rp(x.harga)) + '</td><td>' + (x.tanpaSurat ? '<span class="pill st-dipesan">Belum ada SKU/SPU</span>' : two(esc(x.cara), esc(x.sales))) + '</td><td><span class="pill st-' + x.status + '">' + (STATUS_LABEL[x.status] || x.status) + '</span></td></tr>').join('');
   $('#rpEmpty').style.display = r.rows.length ? 'none' : '';
+  const w = $('#rpWarn'); w.style.display = sl.tanpaSurat ? '' : 'none';
+  w.textContent = sl.tanpaSurat ? sl.tanpaSurat + ' unit sudah ' + 'dipesan/terjual tetapi belum punya SKU atau SPU, jadi hanya dihitung sebagai unit. Nilai penjualannya masuk setelah SKU/SPU dibuat.' : '';
 }
 ['rpFrom', 'rpTo'].forEach((id) => ($('#' + id).onchange = () => loadReport().catch(() => {})));
 $('#rpAll').onclick = () => { $('#rpFrom').value = ''; $('#rpTo').value = ''; loadReport().catch(() => {}); };
