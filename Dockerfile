@@ -11,6 +11,9 @@ RUN apt-get update \
 
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev
+# Fail the build (not a document at 3 pm) if the image library cannot load on this machine's CPU.
+# sharp is pinned to 0.32.x: newer prebuilt binaries need an x86-64-v2 CPU, which many VPS plans do not expose.
+RUN node -e "const s=require('sharp'); console.log('sharp', s.versions.sharp, 'libvips', s.versions.vips)"
 
 COPY server.js ./
 COPY src ./src
