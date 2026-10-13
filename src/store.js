@@ -246,9 +246,14 @@ async function salesReport({ from, to } = {}) {
        ORDER BY lower(d.no_unit), d.id DESC) x
      WHERE ($1::date IS NULL OR x.tanggal >= $1) AND ($2::date IS NULL OR x.tanggal <= $2)
      ORDER BY x.tanggal DESC NULLS LAST, x.id DESC`, [f, t])).rows;
+  // Name, number and date come from the unit's own latest document (the stock card can be blank, e.g. after a manual
+  // status change), then from what the card remembers.
   const noLetter = (await db.query(
-    `SELECT u.no_unit, u.type, u.status, u.pemesan, u.doc_no, d.id, d.jenis, d.tanggal
-     FROM units u LEFT JOIN documents d ON d.no = u.doc_no
+    `SELECT u.no_unit, u.type, u.status, u.pemesan, u.doc_no, d.id, d.no, d.nama, d.jenis, d.tanggal
+     FROM units u
+     LEFT JOIN LATERAL (
+       SELECT x.id, x.no, x.nama, x.jenis, x.tanggal FROM documents x
+       WHERE lower(x.no_unit) = lower(u.no_unit) ORDER BY x.id DESC LIMIT 1) d ON true
      WHERE u.status <> 'tersedia'
        AND NOT EXISTS (SELECT 1 FROM documents s WHERE lower(s.no_unit) = lower(u.no_unit) AND s.jenis IN ('surat-konfirmasi', 'surat-pemesanan'))
        AND ($1::date IS NULL OR d.tanggal >= $1) AND ($2::date IS NULL OR d.tanggal <= $2)
@@ -260,7 +265,7 @@ async function salesReport({ from, to } = {}) {
       sales: str(r.data && r.data.sales) || '—', status: r.status, tanpaSurat: false,
     })),
     ...noLetter.map((r) => ({
-      id: r.id ?? null, tanggal: r.tanggal || null, no: r.doc_no || '—', jenis: r.jenis || '', nama: r.pemesan || '', unit: r.no_unit, type: r.type || '',
+      id: r.id ?? null, tanggal: r.tanggal || null, no: r.no || r.doc_no || '—', jenis: r.jenis || '', nama: str(r.pemesan) || str(r.nama), unit: r.no_unit, type: r.type || '',
       harga: 0, cara: 'Tanpa SKU/SPU', sales: 'Tanpa SKU/SPU', status: r.status, tanpaSurat: true,
     })),
   ];

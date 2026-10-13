@@ -304,6 +304,12 @@ test('sales report: a unit sold by receipt only is listed (no price) so units ma
   const row = after.rows.find((r) => r.unit === 'KW-ONLY');
   assert.ok(row, 'listed although there is no SKU/SPU');
   assert.equal(row.tanpaSurat, true); assert.equal(row.harga, 0); assert.equal(row.status, 'terjual'); assert.equal(row.nama, 'Pembeli Lama');
+  // the stock card forgets the buyer (a manual status change clears it): the unit's own receipt still names them
+  const card = (await (await call('GET', '/api/units', { as: 'boss' })).json()).find((u) => u.no_unit === 'KW-ONLY');
+  await call('POST', `/api/units/${card.id}`, { as: 'boss', body: { status: 'dipesan' } });
+  await call('POST', `/api/units/${card.id}`, { as: 'boss', body: { status: 'terjual' } });
+  const again = (await (await call('GET', '/api/report', { as: 'boss' })).json()).rows.find((r) => r.unit === 'KW-ONLY');
+  assert.equal(again.nama, 'Pembeli Lama'); assert.equal(again.no, made.headers && (await made.clone().json()).no);
   assert.equal(after.sales.jumlah, before.sales.jumlah + 1, 'it counts as a unit');
   assert.equal(after.sales.nilai, before.sales.nilai, 'but adds no value');
   assert.equal(after.sales.tanpaSurat, before.sales.tanpaSurat + 1);
